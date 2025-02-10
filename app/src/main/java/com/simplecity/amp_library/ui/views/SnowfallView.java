@@ -75,18 +75,21 @@ public class SnowfallView extends View {
     final Handler snowHandler = new Handler();
 
     /** Used to determine if we let it snow */
-    final FirebaseRemoteConfig remoteConfig;
+    @Nullable
+    private FirebaseRemoteConfig remoteConfig = null;
 
     public SnowfallView(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
         snowPaint.setColor(Color.WHITE);
         snowPaint.setStyle(Paint.Style.FILL);
 
-        remoteConfig = FirebaseRemoteConfig.getInstance();
-        remoteConfig.setDefaults(R.xml.remote_config_defaults);
-        remoteConfig.setConfigSettings(new FirebaseRemoteConfigSettings.Builder()
-                .setDeveloperModeEnabled(BuildConfig.DEBUG)
-                .build());
+        if(!isInEditMode()) {
+            remoteConfig = FirebaseRemoteConfig.getInstance();
+            remoteConfig.setDefaults(R.xml.remote_config_defaults);
+            remoteConfig.setConfigSettings(new FirebaseRemoteConfigSettings.Builder()
+                    .setDeveloperModeEnabled(BuildConfig.DEBUG)
+                    .build());
+        }
     }
 
     @Override
@@ -115,10 +118,10 @@ public class SnowfallView extends View {
         super.onDetachedFromWindow();
     }
 
-    public void letItSnow() {
+    public void letItSnow(AnalyticsManager analyticsManager) {
         if (snowflakes.isEmpty()) {
             if (lerp(0f, 1f, snowRng.nextFloat()) <= LUCKY) {
-                fetchSnowConfig();
+                fetchSnowConfig(analyticsManager);
             }
         }
     }
@@ -133,14 +136,17 @@ public class SnowfallView extends View {
         invalidate();
     }
 
-    private void fetchSnowConfig() {
+    private void fetchSnowConfig(AnalyticsManager analyticsManager) {
+        if (isInEditMode()) {
+            return;
+        }
         remoteConfig.fetch().addOnCompleteListener((Activity) getContext(), task -> {
             if (task.isSuccessful()) {
                 remoteConfig.activateFetched();
                 if (remoteConfig.getBoolean(LET_IT_SNOW)) {
                     snowHandler.removeCallbacksAndMessages(null);
                     snowHandler.postDelayed(this::generateSnow, SNOWFALL_DELAY);
-                    AnalyticsManager.didSnow();
+                    analyticsManager.didSnow();
                 }
             }
         });

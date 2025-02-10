@@ -4,7 +4,6 @@ apply plugin: Dependencies.BuildPlugins.androidLibrary
 
 android {
     compileSdkVersion Dependencies.compileSdk
-    buildToolsVersion Dependencies.buildTools
 
     defaultConfig {
         minSdkVersion Dependencies.minSdk
@@ -41,4 +40,17 @@ dependencies {
     implementation Dependencies.Rx.rxAndroid
     implementation 'com.f2prateek.rx.preferences2:rx-preferences:2.0.0-RC3'
     implementation 'me.zhanghai.android.materialprogressbar:library:1.4.2'
+}
+
+configurations.all {
+    resolutionStrategy {
+        eachDependency { details ->
+            // Force all of the primary support libraries to use the same version.
+            if (details.requested.group == 'com.android.support'
+                && details.requested.name != 'multidex'
+                && details.requested.name != 'multidex-instrumentation') {
+                details.useVersion Dependencies.Google.Versions.supportLib
+            }
+        }
+    }
 }

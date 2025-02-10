@@ -3,7 +3,6 @@ package com.simplecity.amp_library.playback;
 import android.annotation.SuppressLint;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
-import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -15,9 +14,17 @@ import android.os.IBinder;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.media.MediaBrowserCompat;
+import android.support.v4.media.MediaBrowserServiceCompat;
+import android.util.Log;
 import android.widget.Toast;
 import com.crashlytics.android.Crashlytics;
 import com.simplecity.amp_library.R;
+import com.simplecity.amp_library.ShuttleApplication;
+import com.simplecity.amp_library.androidauto.MediaIdHelper;
+import com.simplecity.amp_library.androidauto.PackageValidator;
+import com.simplecity.amp_library.cast.CastManager;
+import com.simplecity.amp_library.data.Repository;
 import com.simplecity.amp_library.model.Song;
 import com.simplecity.amp_library.notifications.MusicNotificationHelper;
 import com.simplecity.amp_library.playback.constants.ExternalIntents;
@@ -27,19 +34,24 @@ import com.simplecity.amp_library.playback.constants.ServiceCommand;
 import com.simplecity.amp_library.playback.constants.ShortcutCommands;
 import com.simplecity.amp_library.playback.constants.WidgetManager;
 import com.simplecity.amp_library.services.Equalizer;
+import com.simplecity.amp_library.ui.screens.queue.QueueItem;
+import com.simplecity.amp_library.utils.AnalyticsManager;
 import com.simplecity.amp_library.utils.LogUtils;
-import com.simplecity.amp_library.utils.MediaButtonIntentReceiver;
-import com.simplecity.amp_library.utils.PlaylistUtils;
+import com.simplecity.amp_library.utils.SettingsManager;
 import com.simplecity.amp_library.utils.ShuttleUtils;
+import com.simplecity.amp_library.utils.playlists.FavoritesPlaylistManager;
+import dagger.android.AndroidInjection;
 import io.reactivex.Completable;
 import io.reactivex.disposables.CompositeDisposable;
-import io.reactivex.functions.Action;
 import io.reactivex.schedulers.Schedulers;
+import java.util.ArrayList;
 import java.util.ConcurrentModificationException;
 import java.util.List;
+import javax.inject.Inject;
+import kotlin.Unit;
 
 @SuppressLint("InlinedApi")
-public class MusicService extends Service {
+public class MusicService extends MediaBrowserServiceCompat {
 
     @interface NotifyMode {
         int NONE = 0;
@@ -53,15 +65,17 @@ public class MusicService extends Service {
 
     private QueueManager queueManager;
 
-    private PlaybackManager playbackManager;
+    @Nullable
+    private CastManager castManager;
 
     private BluetoothManager bluetoothManager;
 
     private HeadsetManager headsetManager;
 
-    private WidgetManager widgetManager = new WidgetManager();
+    @Inject
+    WidgetManager widgetManager;
 
-    private ScrobbleManager scrobbleManager = new ScrobbleManager();
+    private ScrobbleManager scrobbleManager;
 
     private final IBinder binder = new LocalBinder(this);
 
@@ -83,20 +97,80 @@ public class MusicService extends Service {
 
     private CompositeDisposable disposables = new CompositeDisposable();
 
+    private PackageValidator mPackageValidator;
+
+    private PlaybackManager playbackManager;
+
+    private DummyNotificationHelper dummyNotificationHelper = new DummyNotificationHelper();
+
+    @Inject
+    Repository.SongsRepository songsRepository;
+
+    @Inject
+    Repository.AlbumsRepository albumsRepository;
+
+    @Inject
+    Repository.AlbumArtistsRepository albumArtistsRepository;
+
+    @Inject
+    Repository.PlaylistsRepository playlistsRepository;
+
+    @Inject
+    Repository.GenresRepository genresRepository;
+
+    @Inject
+    PlaybackSettingsManager playbackSettingsManager;
+
+    @Inject
+    SettingsManager settingsManager;
+
+    @Inject
+    AnalyticsManager analyticsManager;
+
+    @Inject
+    FavoritesPlaylistManager favoritesPlaylistManager;
+
     @SuppressLint("InlinedApi")
     @Override
     public void onCreate() {
+        AndroidInjection.inject(this);
         super.onCreate();
 
-        queueManager = new QueueManager(musicServiceCallbacks);
+        queueManager = new QueueManager(
+                musicServiceCallbacks,
+                songsRepository,
+                playbackSettingsManager,
+                settingsManager
+        );
 
-        playbackManager = new PlaybackManager(this, queueManager, musicServiceCallbacks);
+        playbackManager = new PlaybackManager(
+                this,
+                queueManager,
+                playbackSettingsManager,
+                songsRepository,
+                albumsRepository,
+                albumArtistsRepository,
+                genresRepository,
+                playlistsRepository,
+                musicServiceCallbacks,
+                settingsManager
+        );
 
-        bluetoothManager = new BluetoothManager(playbackManager, musicServiceCallbacks);
+        scrobbleManager = new ScrobbleManager(playbackSettingsManager);
 
-        headsetManager = new HeadsetManager(playbackManager);
+        mPackageValidator = new PackageValidator(this);
 
-        notificationHelper = new MusicNotificationHelper(this);
+        setSessionToken(playbackManager.getMediaSessionToken());
+
+        if (CastManager.isCastAvailable(this, settingsManager)) {
+            castManager = new CastManager(this, playbackManager);
+        }
+
+        bluetoothManager = new BluetoothManager(playbackManager, analyticsManager, musicServiceCallbacks, settingsManager);
+
+        headsetManager = new HeadsetManager(playbackManager, playbackSettingsManager);
+
+        notificationHelper = new MusicNotificationHelper(this, analyticsManager);
 
         notificationStateHandler = new NotificationStateHandler(this);
 
@@ -107,14 +181,14 @@ public class MusicService extends Service {
         registerExternalStorageListener();
 
         IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(ServiceCommand.SERVICE_COMMAND);
-        intentFilter.addAction(ServiceCommand.TOGGLE_PAUSE_ACTION);
-        intentFilter.addAction(ServiceCommand.PAUSE_ACTION);
-        intentFilter.addAction(ServiceCommand.NEXT_ACTION);
-        intentFilter.addAction(ServiceCommand.PREV_ACTION);
-        intentFilter.addAction(ServiceCommand.STOP_ACTION);
-        intentFilter.addAction(ServiceCommand.SHUFFLE_ACTION);
-        intentFilter.addAction(ServiceCommand.REPEAT_ACTION);
+        intentFilter.addAction(ServiceCommand.COMMAND);
+        intentFilter.addAction(ServiceCommand.TOGGLE_PLAYBACK);
+        intentFilter.addAction(ServiceCommand.PAUSE);
+        intentFilter.addAction(ServiceCommand.NEXT);
+        intentFilter.addAction(ServiceCommand.PREV);
+        intentFilter.addAction(ServiceCommand.STOP);
+        intentFilter.addAction(ServiceCommand.SHUFFLE);
+        intentFilter.addAction(ServiceCommand.REPEAT);
         intentFilter.addAction(ExternalIntents.PLAY_STATUS_REQUEST);
         registerReceiver(intentReceiver, intentFilter);
 
@@ -125,54 +199,105 @@ public class MusicService extends Service {
         alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
         this.shutdownIntent = PendingIntent.getService(this, 0, shutdownIntent, 0);
 
-        // Listen for the idle state
+        analyticsManager.dropBreadcrumb(TAG, "onCreate(), scheduling delayed shutdown");
         scheduleDelayedShutdown();
 
-        reloadQueue();
+        playbackManager.reloadQueue();
     }
 
     @Override
     public IBinder onBind(final Intent intent) {
+
+        analyticsManager.dropBreadcrumb(TAG, "onBind().. cancelShutdown()");
         cancelShutdown();
         serviceInUse = true;
+
+        // For Android auto, need to call super, or onGetRoot won't be called.
+        if (intent != null && "android.media.browse.MediaBrowserService".equals(intent.getAction())) {
+            return super.onBind(intent);
+        }
+
         return binder;
+    }
+
+    @Nullable
+    @Override
+    public BrowserRoot onGetRoot(@NonNull String clientPackageName, int clientUid, @Nullable Bundle rootHints) {
+        // To ensure you are not allowing any arbitrary app to browse your app's contents, you
+        // need to check the origin:
+        if (!mPackageValidator.isCallerAllowed(this, clientPackageName, clientUid)) {
+            // If the request comes from an untrusted package, return an empty browser root.
+            // If you return null, then the media browser will not be able to connect and
+            // no further calls will be made to other media browsing methods.
+            Log.i(TAG, String.format("OnGetRoot: Browsing NOT ALLOWED for unknown caller. Returning empty browser root so all apps can use MediaController.%s", clientPackageName));
+            return new MediaBrowserServiceCompat.BrowserRoot("EMPTY_ROOT", null);
+        }
+        return new BrowserRoot("media:/root/", null);
+    }
+
+    @Override
+    public void onLoadChildren(@NonNull String parentMediaId, @NonNull Result<List<MediaBrowserCompat.MediaItem>> result) {
+        if ("EMPTY_ROOT".equals(parentMediaId)) {
+            result.sendResult(new ArrayList<>());
+        } else {
+            result.detach();
+            // if music library is ready, return immediately
+            new MediaIdHelper(
+                    (ShuttleApplication) getApplication(),
+                    songsRepository,
+                    albumsRepository,
+                    albumArtistsRepository,
+                    genresRepository,
+                    playlistsRepository
+            ).getChildren(parentMediaId, mediaItems -> {
+                result.sendResult(mediaItems);
+                return Unit.INSTANCE;
+            });
+        }
     }
 
     @Override
     public void onRebind(Intent intent) {
+        analyticsManager.dropBreadcrumb(TAG, "onRebind().. cancelShutdown()");
         cancelShutdown();
         serviceInUse = true;
     }
 
     @Override
     public boolean onUnbind(Intent intent) {
+        analyticsManager.dropBreadcrumb(TAG, "onUnbind()");
+
         serviceInUse = false;
         saveState(true);
 
-        if (playbackManager.getIsSupposedToBePlaying() || playbackManager.pausedByTransientLossOfFocus) {
+        if (playbackManager.isPlaying() || playbackManager.willResumePlayback()) {
             // Something is currently playing, or will be playing once an in-progress action requesting audio focus ends, so don't stop the service now.
             return true;
 
             // If there is a playlist but playback is paused, then wait a while before stopping the service, so that pause/resume isn't slow.
             // Also delay stopping the service if we're transitioning between tracks.
-        } else if (queueManager.playlist.size() > 0 || queueManager.shuffleList.size() > 0 || playbackManager.hasTrackEndedMessage()) {
+        } else if (!queueManager.getCurrentPlaylist().isEmpty()) {
+            analyticsManager.dropBreadcrumb(TAG, "onUnbind() scheduling delayed shutdown.");
             scheduleDelayedShutdown();
             return true;
         }
 
+        analyticsManager.dropBreadcrumb(TAG, "stopSelf() called");
         stopSelf(serviceStartId);
 
-        // Shutdown the EQ
-        Intent shutdownEqualizer = new Intent(MusicService.this, Equalizer.class);
-        stopService(shutdownEqualizer);
         return true;
     }
 
     @Override
     public void onTaskRemoved(Intent rootIntent) {
-        //If nothing is playing, and won't be playing any time soon, we can stop the service.
-        //Presumably this is what the user wanted.
-        if (!isPlaying() && !playbackManager.pausedByTransientLossOfFocus) {
+        analyticsManager.dropBreadcrumb(TAG, "onTaskRemoved()");
+
+        // Fixme:
+        //  playbackManager.willResumePlayback() returns true even after we've manually paused.
+        //  This means we don't call stopSelf(), which in turn causes the service to act as if it has crashed, and will recreate itself unnecessarily.
+
+        if (!isPlaying() && !playbackManager.willResumePlayback()) {
+            analyticsManager.dropBreadcrumb(TAG, "stopSelf() called");
             stopSelf();
         }
 
@@ -181,6 +306,8 @@ public class MusicService extends Service {
 
     @Override
     public void onDestroy() {
+        analyticsManager.dropBreadcrumb(TAG, "onDestroy()");
+
         saveState(true);
 
         //Shutdown the EQ
@@ -191,6 +318,10 @@ public class MusicService extends Service {
 
         // Remove any callbacks from the handlers
         notificationStateHandler.removeCallbacksAndMessages(null);
+
+        if (castManager != null) {
+            castManager.destroy();
+        }
 
         headsetManager.unregisterHeadsetPlugReceiver(this);
         bluetoothManager.unregisterBluetoothReceiver(this);
@@ -204,6 +335,9 @@ public class MusicService extends Service {
 
         playbackManager.destroy();
 
+        dummyNotificationHelper.teardown(this);
+        notificationHelper.tearDown();
+
         disposables.clear();
 
         super.onDestroy();
@@ -214,55 +348,131 @@ public class MusicService extends Service {
         serviceStartId = startId;
 
         if (intent != null) {
-            final String action = intent.getAction();
-            String cmd = intent.getStringExtra("command");
-
-            if (MediaButtonCommand.NEXT.equals(cmd) || ServiceCommand.NEXT_ACTION.equals(action)) {
-                gotoNext(true);
-            } else if (MediaButtonCommand.PREVIOUS.equals(cmd) || ServiceCommand.PREV_ACTION.equals(action)) {
-                if (getSeekPosition() < 2000) {
-                    previous();
-                } else {
-                    seekTo(0);
-                    play();
-                }
-            } else if (MediaButtonCommand.TOGGLE_PAUSE.equals(cmd)
-                    || ServiceCommand.TOGGLE_PAUSE_ACTION.equals(action)) {
-                if (isPlaying()) {
-                    pause();
-                } else {
-                    play();
-                }
-            } else if (MediaButtonCommand.PAUSE.equals(cmd) || ServiceCommand.PAUSE_ACTION.equals(action)) {
-                pause();
-            } else if (MediaButtonCommand.PLAY.equals(cmd)) {
-                play();
-            } else if (ServiceCommand.STOP_ACTION.equals(action) || MediaButtonCommand.STOP.equals(action)) {
-                pause();
-                releaseServiceUiAndStop();
-                notificationStateHandler.removeCallbacksAndMessages(null);
-                //For some reason, the notification will only fuck off if this call is delayed.
-                new Handler().postDelayed(() -> stopForegroundImpl(true, false), 150);
-            } else if (ServiceCommand.SHUFFLE_ACTION.equals(action)) {
-                toggleShuffleMode();
-            } else if (ServiceCommand.REPEAT_ACTION.equals(action)) {
-                toggleRepeat();
-            } else if (MediaButtonCommand.TOGGLE_FAVORITE.equals(action) || ServiceCommand.TOGGLE_FAVORITE.equals(action)) {
-                toggleFavorite();
-            } else if (ExternalIntents.PLAY_STATUS_REQUEST.equals(action)) {
-                notifyChange(ExternalIntents.PLAY_STATUS_RESPONSE);
-            } else if (ServiceCommand.SHUTDOWN.equals(action)) {
-                shutdownScheduled = false;
-                releaseServiceUiAndStop();
-                return START_NOT_STICKY;
+            String action = intent.getAction();
+            String command = intent.getStringExtra(MediaButtonCommand.CMD_NAME);
+            analyticsManager.dropBreadcrumb(TAG, String.format("onStartCommand() Action: %s, Command: %s", action, command));
+            if (command != null) {
+                action = commandToAction(command);
             }
 
             if (action != null) {
                 switch (action) {
+                    case ServiceCommand.NEXT:
+                        dummyNotificationHelper.showDummyNotification(this);
+
+                        // If the service is not already started:
+                        // - With queue: Force to next song, start playback, update notification, no ANR
+                        // - No queue: ANR
+
+                        // Possible solution: (A) Show the Shuttle notification, despite the fact that music isn't playing. Need to customise notification to allow for an empty queue (no current song)
+                        // We could try to generate a queue of random songs as well, but there's no guarantee the user has music on their device.
+
+                        gotoNext(true);
+
+                        break;
+                    case ServiceCommand.PREV:
+                        dummyNotificationHelper.showDummyNotification(this);
+
+                        // If the service is not already started:
+                        // - With queue: ANR
+                        // - No queue: ANR
+
+                        // Possible solution: (A) Show the Shuttle notification, despite the fact that music isn't playing. Need to customise notification to allow for an empty queue (no current song)
+
+                        previous(false);
+
+                        break;
+                    case ServiceCommand.PAUSE:
+                        dummyNotificationHelper.showDummyNotification(this);
+
+                        // If the service is not already started:
+                        // - With queue: ANR
+                        // - No queue: ANR
+
+                        // Possible solution: (A) Show the Shuttle notification, despite the fact that music isn't playing. Need to customise notification to allow for an empty queue (no current song)
+
+                        pause(true);
+                        break;
+                    case ServiceCommand.PLAY:
                     case ShortcutCommands.PLAY:
+                        dummyNotificationHelper.showDummyNotification(this);
+
+                        // If the service is not already started:
+                        // - No queue: ANR
+                        // - With queue: No ANR
+
+                        // Possible solution: (A) Show the Shuttle notification, despite the fact that music isn't playing. Need to customise notification to allow for an empty queue (no current song)
+
                         play();
                         break;
+                    case ServiceCommand.TOGGLE_PLAYBACK:
+                        dummyNotificationHelper.showDummyNotification(this);
+
+                        if (isPlaying()) {
+
+                            // It's not possible to be playing and the service not be started. No ANR
+
+                            pause(intent.getBooleanExtra(MediaButtonCommand.FORCE_PREVIOUS, false));
+                        } else {
+
+                            // Same as ServiceCommand.PLAY
+
+                            play();
+                        }
+                        break;
+                    case ServiceCommand.STOP:
+                        dummyNotificationHelper.showDummyNotification(this);
+
+                        // If the service is already started & we're not playing: ANR
+                        // If the service is not already started: ANR
+
+                        pause(false);
+                        releaseServiceUiAndStop();
+                        notificationStateHandler.removeCallbacksAndMessages(null);
+                        //For some reason, the notification will only go away if this call is delayed.
+                        new Handler().postDelayed(() -> stopForegroundImpl(true, false), 150);
+                        break;
+                    case ServiceCommand.SHUFFLE:
+                        dummyNotificationHelper.showDummyNotification(this);
+
+                        // If the service is not already started: ANR
+
+                        toggleShuffleMode();
+                        break;
+                    case ServiceCommand.REPEAT:
+                        dummyNotificationHelper.showDummyNotification(this);
+
+                        // If the service is not already started: ANR
+
+                        toggleRepeat();
+                        break;
+                    case ServiceCommand.TOGGLE_FAVORITE:
+                        dummyNotificationHelper.showDummyNotification(this);
+
+                        // If the service is not already started: ANR
+
+                        toggleFavorite();
+                        break;
+                    case ExternalIntents.PLAY_STATUS_REQUEST:
+                        dummyNotificationHelper.showDummyNotification(this);
+
+                        // If the service is not already started: ANR
+
+                        notifyChange(ExternalIntents.PLAY_STATUS_RESPONSE);
+                        break;
+                    case ServiceCommand.SHUTDOWN:
+                        dummyNotificationHelper.showDummyNotification(this);
+
+                        // If the service is not already started: ANR
+
+                        shutdownScheduled = false;
+                        releaseServiceUiAndStop();
+                        return START_NOT_STICKY;
                     case ShortcutCommands.SHUFFLE_ALL:
+                        dummyNotificationHelper.showDummyNotification(this);
+
+                        // If service is not already started: ANR
+
                         queueManager.makeShuffleList();
                         playAutoShuffleList();
                         break;
@@ -270,12 +480,9 @@ public class MusicService extends Service {
             }
         }
 
-        // Make sure the service will shut down on its own if it was  just started but not bound to and nothing is playing
+        // Make sure the service will shut down on its own if it was just started but not bound to and nothing is playing
+        analyticsManager.dropBreadcrumb(TAG, "onStartCommand() scheduling delayed shutdown");
         scheduleDelayedShutdown();
-
-        if (intent != null && intent.getBooleanExtra(MediaButtonCommand.FROM_MEDIA_BUTTON, false)) {
-            MediaButtonIntentReceiver.completeWakefulIntent(intent);
-        }
 
         return START_STICKY;
     }
@@ -283,47 +490,83 @@ public class MusicService extends Service {
     private final BroadcastReceiver intentReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(final Context context, final Intent intent) {
-            final String action = intent.getAction();
-            final String command = intent.getStringExtra("command");
 
-            if (MediaButtonCommand.NEXT.equals(command) || ServiceCommand.NEXT_ACTION.equals(action)) {
-                gotoNext(true);
-            } else {
-                if (MediaButtonCommand.PREVIOUS.equals(command) || ServiceCommand.PREV_ACTION.equals(action)) {
-                    if (getSeekPosition() < 2000) {
-                        previous();
-                    } else {
-                        seekTo(0);
-                        play();
-                    }
-                } else {
-                    if (MediaButtonCommand.TOGGLE_PAUSE.equals(command) || ServiceCommand.TOGGLE_PAUSE_ACTION.equals(action)) {
+            String action = intent.getAction();
+
+            String command = intent.getStringExtra(MediaButtonCommand.CMD_NAME);
+            if (command != null) {
+                action = commandToAction(command);
+                widgetManager.processCommand(MusicService.this, intent, command);
+            }
+
+            if (action != null) {
+                analyticsManager.dropBreadcrumb(TAG, String.format("onReceive() Action: %s, Command: %s", action, command));
+                switch (action) {
+                    case ServiceCommand.NEXT:
+                        gotoNext(true);
+                        break;
+                    case ServiceCommand.PREV:
+                        previous(false);
+                        break;
+                    case ServiceCommand.TOGGLE_PLAYBACK:
                         if (isPlaying()) {
-                            pause();
+                            pause(true);
                         } else {
                             play();
                         }
-                    } else if (MediaButtonCommand.PAUSE.equals(command)
-                            || ServiceCommand.PAUSE_ACTION.equals(action)) {
-                        pause();
-                    } else if (MediaButtonCommand.PLAY.equals(command)) {
+                        break;
+                    case ServiceCommand.PAUSE:
+                        pause(true);
+                        break;
+                    case ServiceCommand.PLAY:
                         play();
-                    } else if (MediaButtonCommand.STOP.equals(command)) {
-                        pause();
+                        break;
+                    case ServiceCommand.STOP:
+                        pause(false);
                         releaseServiceUiAndStop();
-                    } else if (MediaButtonCommand.TOGGLE_FAVORITE.equals(command)) {
+                        break;
+                    case ServiceCommand.TOGGLE_FAVORITE:
                         toggleFavorite();
-                    }
-                    widgetManager.processCommand(MusicService.this, intent, command);
+                        break;
                 }
             }
         }
     };
 
+    @Nullable
+    public String commandToAction(@NonNull String command) {
+        switch (command) {
+            case MediaButtonCommand.NEXT:
+                return ServiceCommand.NEXT;
+            case MediaButtonCommand.PREVIOUS:
+                return ServiceCommand.PREV;
+            case MediaButtonCommand.TOGGLE_PAUSE:
+                return ServiceCommand.TOGGLE_PLAYBACK;
+            case MediaButtonCommand.PAUSE:
+                return ServiceCommand.PAUSE;
+            case MediaButtonCommand.PLAY:
+                return ServiceCommand.PLAY;
+            case MediaButtonCommand.STOP:
+                return ServiceCommand.STOP;
+            case MediaButtonCommand.TOGGLE_FAVORITE:
+                return ServiceCommand.TOGGLE_FAVORITE;
+        }
+        return null;
+    }
+
+
     /**
      * Release resources and destroy the service.
      */
     void releaseServiceUiAndStop() {
+
+        // If we're currently playing, or we're going to be playing in the near future, don't shutdown.
+        if (isPlaying() || playbackManager.willResumePlayback()) {
+            return;
+        }
+
+        analyticsManager.dropBreadcrumb(TAG, "releaseServiceUiAndStop()");
+
         playbackManager.release();
 
         cancelNotification();
@@ -335,6 +578,7 @@ public class MusicService extends Service {
             Intent shutdownEqualizer = new Intent(MusicService.this, Equalizer.class);
             stopService(shutdownEqualizer);
 
+            analyticsManager.dropBreadcrumb(TAG, "stopSelf() called");
             stopSelf(serviceStartId);
         }
     }
@@ -351,7 +595,7 @@ public class MusicService extends Service {
 
     /**
      * Registers an intent to listen for ACTION_MEDIA_EJECT notifications. The intent will call closeExternalStorageFiles() if the external
-     * media is going to be ejected, so applications can clean up any files they have open.
+     * media is going to be ejected, so scs can clean up any files they have open.
      */
     public void registerExternalStorageListener() {
         if (unmountReceiver == null) {
@@ -365,7 +609,7 @@ public class MusicService extends Service {
                         closeExternalStorageFiles();
                     } else if (Intent.ACTION_MEDIA_MOUNTED.equals(action)) {
                         queueManager.queueIsSaveable = true;
-                        reloadQueue();
+                        playbackManager.reloadQueue();
                     }
                 }
             };
@@ -395,8 +639,18 @@ public class MusicService extends Service {
      * @param action The action to take
      */
     public void enqueue(List<Song> songs, @QueueManager.EnqueueAction final int action) {
-        synchronized (this) {
-            playbackManager.enqueue(songs, action);
+        playbackManager.enqueue(songs, action);
+    }
+
+    public void moveToNext(QueueItem queueItem) {
+        List<QueueItem> playlist = queueManager.getCurrentPlaylist();
+        int fromIndex = playlist.indexOf(queueItem);
+
+        QueueItem currentQueueItem = queueManager.getCurrentQueueItem();
+        int toIndex = playlist.indexOf(currentQueueItem) + 1;
+
+        if (fromIndex != toIndex) {
+            playbackManager.moveQueueItem(fromIndex, toIndex);
         }
     }
 
@@ -404,9 +658,7 @@ public class MusicService extends Service {
      * Sets the track to be played
      */
     protected void setNextTrack() {
-        synchronized (this) {
-            playbackManager.setNextTrack();
-        }
+        playbackManager.setNextTrack();
     }
 
     /**
@@ -415,22 +667,8 @@ public class MusicService extends Service {
      * @param songs The list of songs to open
      * @param position The position to start playback at
      */
-    public void open(@NonNull List<Song> songs, final int position) {
-        synchronized (this) {
-            playbackManager.open(songs, position);
-        }
-    }
-
-    /**
-     * Opens a song and prepares it for playback
-     *
-     * @param song the song to open
-     * @return true if the song as successfully opened
-     */
-    public boolean open(@NonNull Song song) {
-        synchronized (this) {
-            return playbackManager.open(song);
-        }
+    public void open(@NonNull List<Song> songs, int position, Boolean playWhenReady) {
+        playbackManager.load(songs, position, playWhenReady, 0);
     }
 
     /**
@@ -438,37 +676,37 @@ public class MusicService extends Service {
      *
      * @param path The path of the file to open
      */
-    public void openFile(String path, @Nullable Action completion) {
-        synchronized (this) {
-            playbackManager.openFile(path, completion);
-        }
+    public void openFile(String path, Boolean playWhenReady) {
+        playbackManager.loadFile(path, playWhenReady);
     }
 
     /**
      * Starts playback of a previously opened file
      */
     public void play() {
-        synchronized (this) {
-            playbackManager.play();
-        }
+        playbackManager.play();
+    }
+
+    public void togglePlayback() {
+        playbackManager.togglePlayback();
     }
 
     /**
      * Stops playback
      */
     public void stop() {
-        synchronized (this) {
-            playbackManager.stop(true);
-        }
+        analyticsManager.dropBreadcrumb(TAG, "stop()");
+        playbackManager.stop(true);
     }
 
     /**
      * Pauses playback
+     *
+     * @param canFade whether we are allowed to fade out before pausing.
      */
-    public void pause() {
-        synchronized (this) {
-            playbackManager.pause();
-        }
+    public void pause(boolean canFade) {
+        analyticsManager.dropBreadcrumb(TAG, "pause()");
+        playbackManager.pause(canFade);
     }
 
     /**
@@ -477,27 +715,21 @@ public class MusicService extends Service {
      * @return true if something is playing (or will be playing shortly, in case we're currently transitioning between tracks), false if not
      */
     public boolean isPlaying() {
-        synchronized (this) {
-            return playbackManager.isPlaying();
-        }
+        return playbackManager.isPlaying();
     }
 
     /**
      * @return true if is playing or has played recently
      */
     private boolean recentlyPlayed() {
-        synchronized (this) {
-            return playbackManager.recentlyPlayed();
-        }
+        return playbackManager.recentlyPlayed();
     }
 
     /**
      * Changes from the current track to the previous track
      */
-    public void previous() {
-        synchronized (this) {
-            playbackManager.previous();
-        }
+    public void previous(boolean force) {
+        playbackManager.previous(force);
     }
 
     /**
@@ -506,18 +738,14 @@ public class MusicService extends Service {
      * @param force true to move to the next song regardless of repeat mode.
      */
     public void gotoNext(boolean force) {
-        synchronized (this) {
-            playbackManager.next(force);
-        }
+        playbackManager.next(force);
     }
 
     /**
      * Returns the current playback position in milliseconds
      */
     public long getSeekPosition() {
-        synchronized (this) {
-            return playbackManager.getSeekPosition();
-        }
+        return playbackManager.getSeekPosition();
     }
 
     /**
@@ -526,27 +754,21 @@ public class MusicService extends Service {
      * @param position The position to seek to, in milliseconds
      */
     public void seekTo(long position) {
-        synchronized (this) {
-            playbackManager.seekTo(position);
-        }
+        playbackManager.seekTo(position);
     }
 
     /**
      * @return int the audio session ID.
      */
     public int getAudioSessionId() {
-        synchronized (this) {
-            return playbackManager.getAudioSessionId();
-        }
+        return playbackManager.getAudioSessionId();
     }
 
     /**
      * Creates a shuffled list of all songs and begins playback
      */
     public void playAutoShuffleList() {
-        synchronized (this) {
-            playbackManager.playAutoShuffleList();
-        }
+        playbackManager.playAutoShuffleList();
     }
 
     @QueueManager.ShuffleMode
@@ -555,9 +777,7 @@ public class MusicService extends Service {
     }
 
     public void setShuffleMode(@QueueManager.ShuffleMode int shufflemode) {
-        synchronized (this) {
-            queueManager.setShuffleMode(shufflemode);
-        }
+        queueManager.setShuffleMode(shufflemode);
     }
 
     @QueueManager.RepeatMode
@@ -566,29 +786,26 @@ public class MusicService extends Service {
     }
 
     public void setRepeatMode(@QueueManager.RepeatMode int repeatMode) {
-        synchronized (this) {
-            queueManager.setRepeatMode(repeatMode);
-            setNextTrack();
-        }
+        queueManager.setRepeatMode(repeatMode);
+        setNextTrack();
     }
 
     @Nullable
     public Song getSong() {
-        synchronized (this) {
-            return queueManager.getCurrentSong();
-        }
+        return queueManager.getCurrentSong();
     }
 
     public void toggleFavorite() {
         Song song = queueManager.getCurrentSong();
         if (song != null) {
-            PlaylistUtils.toggleFavorite(song, isFavorite -> {
+            favoritesPlaylistManager.toggleFavorite(song, isFavorite -> {
                 if (isFavorite) {
                     Toast.makeText(MusicService.this, getString(R.string.song_to_favourites, song.name), Toast.LENGTH_SHORT).show();
                 } else {
                     Toast.makeText(MusicService.this, getString(R.string.song_removed_from_favourites, song.name), Toast.LENGTH_SHORT).show();
                 }
                 notifyChange(InternalIntents.FAVORITE_CHANGED);
+                return Unit.INSTANCE;
             });
         }
     }
@@ -643,29 +860,23 @@ public class MusicService extends Service {
     }
 
     public void clearQueue() {
-        synchronized (this) {
-            playbackManager.clearQueue();
-        }
+        playbackManager.clearQueue();
     }
 
-    void reloadQueue() {
-        synchronized (this) {
-            playbackManager.reloadQueue();
-        }
-    }
-
-    public List<Song> getQueue() {
-        synchronized (this) {
-            return queueManager.getCurrentPlaylist();
-        }
+    public List<QueueItem> getQueue() {
+        return queueManager.getCurrentPlaylist();
     }
 
     /**
      * @return the position in the queue
      */
     public int getQueuePosition() {
+        return queueManager.queuePosition;
+    }
+
+    public boolean getQueueReloading() {
         synchronized (this) {
-            return queueManager.queuePosition;
+            return queueManager.queueReloading;
         }
     }
 
@@ -675,27 +886,23 @@ public class MusicService extends Service {
      * @param position The position in the queue of the track that will be played.
      */
     public void setQueuePosition(int position) {
-        synchronized (this) {
-            playbackManager.setQueuePosition(position);
-        }
+        playbackManager.setQueuePosition(position);
+    }
+
+    public void removeQueueItems(List<QueueItem> queueItems) {
+        playbackManager.removeQueueItems(queueItems);
     }
 
     public void removeSongs(List<Song> songs) {
-        synchronized (this) {
-            playbackManager.removeSongs(songs);
-        }
+        playbackManager.removeSongs(songs);
     }
 
-    public void removeSong(int position) {
-        synchronized (this) {
-            playbackManager.removeSong(position);
-        }
+    public void removeQueueItem(QueueItem queueItem) {
+        playbackManager.removeQueueItem(queueItem);
     }
 
     public void moveQueueItem(int from, int to) {
-        synchronized (this) {
-            playbackManager.moveQueueItem(from, to);
-        }
+        playbackManager.moveQueueItem(from, to);
     }
 
     // EQ
@@ -713,11 +920,20 @@ public class MusicService extends Service {
     }
 
     private void scheduleDelayedShutdown() {
+        if (isPlaying() || serviceInUse || playbackManager.willResumePlayback()) {
+            analyticsManager.dropBreadcrumb(TAG,
+                    String.format("scheduleDelayedShutdown called.. returning early. isPlaying: %s service in use: %s will resume playback: %s",
+                            isPlaying(), serviceInUse, playbackManager.willResumePlayback()));
+            return;
+        }
+
+        analyticsManager.dropBreadcrumb(TAG, "scheduleDelayedShutdown for 5 mins from now");
         alarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime() + 5 * 60 * 1000 /* 5 mins */, shutdownIntent);
         shutdownScheduled = true;
     }
 
     private void cancelShutdown() {
+        analyticsManager.dropBreadcrumb(TAG, "cancelShutdown() called. Shutdown scheduled: " + shutdownScheduled);
         if (shutdownScheduled) {
             alarmManager.cancel(shutdownIntent);
             shutdownScheduled = false;
@@ -745,7 +961,8 @@ public class MusicService extends Service {
             case NotifyMode.BACKGROUND:
                 try {
                     if (queueManager.getCurrentSong() != null) {
-                        notificationHelper.notify(this, queueManager.getCurrentSong(), isPlaying(), playbackManager.getMediaSessionToken());
+                        notificationHelper.notify(this, playlistsRepository, songsRepository, queueManager.getCurrentSong(), isPlaying(), playbackManager.getMediaSessionToken(), settingsManager,
+                                favoritesPlaylistManager);
                     }
                 } catch (ConcurrentModificationException e) {
                     LogUtils.logException(TAG, "Exception while attempting to show notification", e);
@@ -780,7 +997,21 @@ public class MusicService extends Service {
             notificationStateHandler.sendEmptyMessage(NotificationStateHandler.START_FOREGROUND);
             Song song = queueManager.getCurrentSong();
             if (song != null) {
-                notificationHelper.startForeground(this, queueManager.getCurrentSong(), isPlaying(), playbackManager.getMediaSessionToken());
+                Log.i(TAG, "startForeground called");
+                if (notificationHelper.startForeground(
+                        this,
+                        playlistsRepository,
+                        songsRepository,
+                        queueManager.getCurrentSong(),
+                        isPlaying(),
+                        playbackManager.getMediaSessionToken(),
+                        settingsManager,
+                        favoritesPlaylistManager
+                )) {
+                    dummyNotificationHelper.setForegroundedByApp(true);
+                }
+            } else {
+                Log.e(TAG, "startForeground should have been called, but song is null");
             }
         } catch (NullPointerException | ConcurrentModificationException e) {
             Crashlytics.log("startForegroundImpl error: " + e.getMessage());
@@ -798,6 +1029,7 @@ public class MusicService extends Service {
             notificationStateHandler.sendEmptyMessageDelayed(NotificationStateHandler.STOP_FOREGROUND, 1500);
         } else {
             stopForeground(removeNotification);
+            dummyNotificationHelper.setForegroundedByApp(false);
         }
     }
 
@@ -931,8 +1163,6 @@ public class MusicService extends Service {
 
         void updateNotification();
 
-        void releaseServiceUiAndStop();
-
         void stopForegroundImpl(boolean removeNotification, boolean withDelay);
     }
 
@@ -956,11 +1186,6 @@ public class MusicService extends Service {
         @Override
         public void updateNotification() {
             MusicService.this.updateNotification();
-        }
-
-        @Override
-        public void releaseServiceUiAndStop() {
-            MusicService.this.releaseServiceUiAndStop();
         }
 
         @Override

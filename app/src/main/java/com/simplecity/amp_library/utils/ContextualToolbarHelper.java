@@ -1,9 +1,9 @@
 package com.simplecity.amp_library.utils;
 
+import android.content.Context;
 import android.support.annotation.NonNull;
 import com.annimon.stream.Stream;
 import com.simplecity.amp_library.R;
-import com.simplecity.amp_library.ShuttleApplication;
 import com.simplecity.amp_library.ui.modelviews.SelectableViewModel;
 import com.simplecity.amp_library.ui.views.ContextualToolbar;
 import java.util.ArrayList;
@@ -14,10 +14,12 @@ import java.util.Map;
 public class ContextualToolbarHelper<T> {
 
     public interface Callback {
-        void notifyItemChanged(int position, SelectableViewModel viewModel);
+        void notifyItemChanged(SelectableViewModel viewModel);
 
         void notifyDatasetChanged();
     }
+
+    private Context applicationContext;
 
     private final Map<SelectableViewModel, T> map = new LinkedHashMap<>(0);
 
@@ -29,7 +31,8 @@ public class ContextualToolbarHelper<T> {
     private boolean isActive;
     private boolean canChangeTitle = true;
 
-    public ContextualToolbarHelper(@NonNull ContextualToolbar contextualToolbar, @NonNull Callback callback) {
+    public ContextualToolbarHelper(Context context, @NonNull ContextualToolbar contextualToolbar, @NonNull Callback callback) {
+        this.applicationContext = context.getApplicationContext();
         this.contextualToolbar = contextualToolbar;
         this.callback = callback;
     }
@@ -59,7 +62,7 @@ public class ContextualToolbarHelper<T> {
 
     private void updateCount() {
         if (canChangeTitle) {
-            contextualToolbar.setTitle(ShuttleApplication.getInstance().getString(R.string.action_mode_selection_count, map.size()));
+            contextualToolbar.setTitle(applicationContext.getString(R.string.action_mode_selection_count, map.size()));
         }
     }
 
@@ -79,20 +82,20 @@ public class ContextualToolbarHelper<T> {
         }
     }
 
-    public boolean handleClick(int position, SelectableViewModel selectableViewModel, T item) {
+    public boolean handleClick(SelectableViewModel selectableViewModel, T item) {
         if (isActive) {
             addOrRemoveItem(selectableViewModel, item);
-            callback.notifyItemChanged(position, selectableViewModel);
+            callback.notifyItemChanged(selectableViewModel);
             return true;
         }
         return false;
     }
 
-    public boolean handleLongClick(int position, SelectableViewModel selectableViewModel, T item) {
+    public boolean handleLongClick(SelectableViewModel selectableViewModel, T item) {
         if (!isActive) {
             start();
             addOrRemoveItem(selectableViewModel, item);
-            callback.notifyItemChanged(position, selectableViewModel);
+            callback.notifyItemChanged(selectableViewModel);
             return true;
         }
         return false;

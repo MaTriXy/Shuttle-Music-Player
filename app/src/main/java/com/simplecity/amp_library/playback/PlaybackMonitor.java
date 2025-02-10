@@ -4,8 +4,12 @@ import com.simplecity.amp_library.utils.MusicServiceConnectionUtils;
 import io.reactivex.BackpressureStrategy;
 import io.reactivex.Flowable;
 import io.reactivex.Observable;
+import io.reactivex.android.schedulers.AndroidSchedulers;
 import java.util.concurrent.TimeUnit;
+import javax.inject.Inject;
+import javax.inject.Singleton;
 
+@Singleton
 public class PlaybackMonitor {
 
     private static final String TAG = "PlaybackMonitor";
@@ -13,7 +17,8 @@ public class PlaybackMonitor {
     private Flowable<Float> progressObservable;
     private Flowable<Long> currentTimeObservable;
 
-    public PlaybackMonitor(MediaManager mediaManager) {
+    @Inject
+    PlaybackMonitor(MediaManager mediaManager) {
         progressObservable = Flowable.defer(() -> Observable.interval(32, TimeUnit.MILLISECONDS)
                 .filter(aLong -> {
                     if (MusicServiceConnectionUtils.serviceBinder != null
@@ -24,6 +29,7 @@ public class PlaybackMonitor {
                     }
                     return false;
                 })
+                .observeOn(AndroidSchedulers.mainThread())
                 .map(aLong -> (float) mediaManager.getPosition() / (float) mediaManager.getDuration())
                 .toFlowable(BackpressureStrategy.DROP))
                 .share();
@@ -31,6 +37,7 @@ public class PlaybackMonitor {
         currentTimeObservable = Flowable.defer(() -> Observable.interval(150, TimeUnit.MILLISECONDS)
                 .filter(aLong -> MusicServiceConnectionUtils.serviceBinder != null
                         && MusicServiceConnectionUtils.serviceBinder.getService() != null)
+                .observeOn(AndroidSchedulers.mainThread())
                 .map(time -> mediaManager.getPosition())
                 .toFlowable(BackpressureStrategy.DROP))
                 .share();

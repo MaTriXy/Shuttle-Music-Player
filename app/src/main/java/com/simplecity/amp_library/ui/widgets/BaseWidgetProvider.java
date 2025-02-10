@@ -15,7 +15,6 @@ import android.widget.RemoteViews;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.simplecity.amp_library.R;
-import com.simplecity.amp_library.ShuttleApplication;
 import com.simplecity.amp_library.glide.utils.CustomAppWidgetTarget;
 import com.simplecity.amp_library.playback.MusicService;
 import com.simplecity.amp_library.playback.QueueManager;
@@ -23,7 +22,7 @@ import com.simplecity.amp_library.playback.constants.InternalIntents;
 import com.simplecity.amp_library.playback.constants.MediaButtonCommand;
 import com.simplecity.amp_library.playback.constants.ServiceCommand;
 import com.simplecity.amp_library.rx.UnsafeAction;
-import com.simplecity.amp_library.ui.activities.MainActivity;
+import com.simplecity.amp_library.ui.screens.main.MainActivity;
 import com.simplecity.amp_library.utils.DrawableUtils;
 import com.simplecity.amp_library.utils.ShuttleUtils;
 
@@ -47,25 +46,29 @@ public abstract class BaseWidgetProvider extends AppWidgetProvider {
     public static final String ARG_WIDGET_SHOW_ARTWORK = "widget_show_artwork_";
     public static final String ARG_WIDGET_COLOR_FILTER = "widget_color_filter_";
 
-    public SharedPreferences mPrefs = PreferenceManager.getDefaultSharedPreferences(ShuttleApplication.getInstance());
-
     @LayoutRes
     public int mLayoutId;
 
-    public abstract void update(MusicService service, int[] appWidgetIds, boolean updateArtwork);
+    public abstract void update(MusicService service, SharedPreferences sharedPreferences, int[] appWidgetIds, boolean updateArtwork);
 
-    protected abstract void initialiseWidget(Context context, int appWidgetId);
+    protected abstract void initialiseWidget(Context context, SharedPreferences sharedPreferences, int appWidgetId);
+
+    SharedPreferences getSharedPreferences(Context context) {
+        return PreferenceManager.getDefaultSharedPreferences(context);
+    }
 
     @Override
     public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
 
+        SharedPreferences sharedPreferences = getSharedPreferences(context);
+
         for (int appWidgetId : appWidgetIds) {
-            mLayoutId = mPrefs.getInt(getLayoutIdString() + appWidgetId, getWidgetLayoutId());
-            initialiseWidget(context, appWidgetId);
+            mLayoutId = sharedPreferences.getInt(getLayoutIdString() + appWidgetId, getWidgetLayoutId());
+            initialiseWidget(context, sharedPreferences, appWidgetId);
         }
 
         // Send broadcast intent to any running MusicService so it can wrap around with an immediate update.
-        Intent updateIntent = new Intent(ServiceCommand.SERVICE_COMMAND);
+        Intent updateIntent = new Intent(ServiceCommand.COMMAND);
         updateIntent.putExtra(MediaButtonCommand.CMD_NAME, getUpdateCommandString());
         updateIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, appWidgetIds);
         updateIntent.addFlags(Intent.FLAG_RECEIVER_REGISTERED_ONLY);
@@ -94,7 +97,7 @@ public abstract class BaseWidgetProvider extends AppWidgetProvider {
                     || InternalIntents.PLAY_STATE_CHANGED.equals(what)
                     || InternalIntents.SHUFFLE_CHANGED.equals(what)
                     || InternalIntents.REPEAT_CHANGED.equals(what)) {
-                update(service, getInstances(service), InternalIntents.META_CHANGED.equals(what));
+                update(service, getSharedPreferences(service), getInstances(service), InternalIntents.META_CHANGED.equals(what));
             }
         }
     }
@@ -104,19 +107,19 @@ public abstract class BaseWidgetProvider extends AppWidgetProvider {
         PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, new Intent(context, MainActivity.class), 0);
         views.setOnClickPendingIntent(rootViewId, pendingIntent);
 
-        pendingIntent = getPendingIntent(context, appWidgetId, new Intent(ServiceCommand.TOGGLE_PAUSE_ACTION));
+        pendingIntent = getPendingIntent(context, appWidgetId, new Intent(ServiceCommand.TOGGLE_PLAYBACK));
         views.setOnClickPendingIntent(R.id.play_button, pendingIntent);
 
-        pendingIntent = getPendingIntent(context, appWidgetId, new Intent(ServiceCommand.NEXT_ACTION));
+        pendingIntent = getPendingIntent(context, appWidgetId, new Intent(ServiceCommand.NEXT));
         views.setOnClickPendingIntent(R.id.next_button, pendingIntent);
 
-        pendingIntent = getPendingIntent(context, appWidgetId, new Intent(ServiceCommand.PREV_ACTION));
+        pendingIntent = getPendingIntent(context, appWidgetId, new Intent(ServiceCommand.PREV));
         views.setOnClickPendingIntent(R.id.prev_button, pendingIntent);
 
-        pendingIntent = getPendingIntent(context, appWidgetId, new Intent(ServiceCommand.SHUFFLE_ACTION));
+        pendingIntent = getPendingIntent(context, appWidgetId, new Intent(ServiceCommand.SHUFFLE));
         views.setOnClickPendingIntent(R.id.shuffle_button, pendingIntent);
 
-        pendingIntent = getPendingIntent(context, appWidgetId, new Intent(ServiceCommand.REPEAT_ACTION));
+        pendingIntent = getPendingIntent(context, appWidgetId, new Intent(ServiceCommand.REPEAT));
         views.setOnClickPendingIntent(R.id.repeat_button, pendingIntent);
     }
 

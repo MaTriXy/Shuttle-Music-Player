@@ -32,8 +32,7 @@
     <string name="repeat_all_notif">Повтор всех треков</string>
     <!-- Individual song context menu item -->
     <string name="ringtone_menu">Поставить на звонок</string>
-    <!-- Toast after setting a song as phone ringtone -->
-    <string name="ringtone_set">\"<xliff:g example="Alarm Bell" id="name">%s</xliff:g>\" выбран как рингтон на звонок.</string>
+    <!-- Toast after setting a song as phone ringtone.-->
     <!-- Toast if setting ringtone fails -->
     <string name="ringtone_set_failed">Невозможно поставить на звонок</string>
     <!-- Toasts after adding song(s) to playlists -->
@@ -122,7 +121,7 @@
     <string name="delete_album_artist_desc_multiple">Все песни следующих исполнителей:<xliff:g id="album-artist">%s</xliff:g> будут безвозвратно удалены</string>
     <!-- Delete confirmation dialog when deleting an entire album -->
     <string name="delete_album_desc">Все песни из альбома <xliff:g id="album">%s</xliff:g> будут безвозвратно удалены.</string>
-    <!-- Delete confirmation dialog message when deleting albums -->
+    <!-- Delete confirmation dialog when deleting songs from unknown album/artist or songs whose name is unknown. -->
     <string name="get_pro_button_play_store">Play Маркет</string>
     <string name="get_pro_button_amazon">Amazon</string>
     <string name="delete_album_desc_multiple">Следующие альбомы:<xliff:g id="album">%s</xliff:g> будут безвозвратно удалены.</string>
@@ -200,7 +199,7 @@
     <string name="fav_title">Избранное</string>
     <!-- -->
     <string name="library_title">Библиотека</string>
-    <!-- -->
+    <!-- Lock Queue -->
     <!-- Library screen, menu item -->
     <string name="search_title">Поиск</string>
     <string name="search_filter">Фильтр</string>
@@ -296,10 +295,6 @@
     <string name="pref_title_ignore_folder_art">Игнорировать обложку из папки</string>
     <!-- Settings summary for the embedded artwork checkbox-->
     <string name="pref_summary_ignore_folder_art">Не искать обложку в ваших папках с музыкой</string>
-    <!-- Settings title for ignore folder artwork checkbox (whether the app can use local artwork for the album art -->
-    <string name="pref_title_prefer_lastfm">Предпочитать обложку с Last.fm</string>
-    <!-- Settings summary for the embedded artwork checkbox-->
-    <string name="pref_summary_prefer_lastfm">Поставьте галочку, если Вы хотите, что бы Shuttle сначала искал обложку на Last.fm, а потом — на iTunes (только для обложек альбомов)</string>
     <!-- Settings title for Artwork settings heading -->
     <string name="pref_string_title_artwork">Обложки</string>
     <!-- Settings title for the download artwork button -->
@@ -391,8 +386,6 @@
     <string name="pref_title_version">Версия</string>
     <string name="pref_title_faq">Часто задаваемые вопросы</string>
     <string name="pref_summary_faq">Есть вопросы? Нужна помощь? Нажмите сюда для просмотра FAQ на www.shuttlemusicplayer.com</string>
-    <string name="pref_title_gplus">Получить помощь</string>
-    <string name="pref_summary_gplus">На Google+ есть очень активное сообщество пользователей Shuttle. Если Вы имеете вопросы или нуждаетесь в помощи, это лучшее место, куда следует обратиться.</string>
     <string name="pref_title_rate">Поблагодарить</string>
     <string name="pref_summary_rate">Если Вам нравится Shuttle, оставьте отзыв, пожалуйста.</string>
     <string name="pref_title_headset_beep">Звук при пропуске</string>
@@ -707,8 +700,6 @@
     <string name="artwork_edit">Выбрать обложку</string>
     <string name="artwork_type_media_store">Магазин музыки</string>
     <string name="artwork_type_tag">Тег</string>
-    <string name="artwork_type_lastfm">Last.FM</string>
-    <string name="artwork_type_itunes">iTunes</string>
     <string name="artwork_type_custom">Сбросить</string>
     <string name="artwork_gallery">Галерея</string>
     <!-- Launcher Shortcuts -->

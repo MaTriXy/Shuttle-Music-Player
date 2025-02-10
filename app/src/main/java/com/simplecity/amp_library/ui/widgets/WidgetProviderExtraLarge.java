@@ -1,6 +1,7 @@
 package com.simplecity.amp_library.ui.widgets;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.os.Environment;
 import android.support.v4.content.ContextCompat;
@@ -11,7 +12,10 @@ import com.simplecity.amp_library.model.Song;
 import com.simplecity.amp_library.playback.MusicService;
 import com.simplecity.amp_library.utils.ColorUtils;
 import com.simplecity.amp_library.utils.DrawableUtils;
+import javax.inject.Inject;
+import javax.inject.Singleton;
 
+@Singleton
 public class WidgetProviderExtraLarge extends BaseWidgetProvider {
 
     private static final String TAG = "MusicAppWidgetProvider";
@@ -19,6 +23,10 @@ public class WidgetProviderExtraLarge extends BaseWidgetProvider {
     public static final String ARG_EXTRA_LARGE_LAYOUT_ID = "widget_extra_large_layout_id_";
 
     public static final String CMDAPPWIDGETUPDATE = "appwidgetupdate_extra_large";
+
+    @Inject
+    public WidgetProviderExtraLarge() {
+    }
 
     @Override
     public String getUpdateCommandString() {
@@ -40,36 +48,27 @@ public class WidgetProviderExtraLarge extends BaseWidgetProvider {
         return R.id.widget_layout_extra_large;
     }
 
-    private static WidgetProviderExtraLarge sInstance;
-
-    public static synchronized WidgetProviderExtraLarge getInstance() {
-        if (sInstance == null) {
-            sInstance = new WidgetProviderExtraLarge();
-        }
-        return sInstance;
-    }
-
     @Override
-    protected void initialiseWidget(Context context, int appWidgetId) {
+    protected void initialiseWidget(Context context, SharedPreferences sharedPreferences, int appWidgetId) {
         final Resources res = context.getResources();
         final RemoteViews views = new RemoteViews(context.getPackageName(), mLayoutId);
 
         views.setViewVisibility(R.id.text1, View.GONE);
         views.setTextViewText(R.id.text2, res.getText(R.string.widget_initial_text));
 
-        int textColor = mPrefs.getInt(ARG_WIDGET_TEXT_COLOR + appWidgetId, ContextCompat.getColor(context, R.color.white));
+        int textColor = sharedPreferences.getInt(ARG_WIDGET_TEXT_COLOR + appWidgetId, ContextCompat.getColor(context, R.color.white));
         views.setImageViewResource(R.id.next_button, R.drawable.ic_skip_next_24dp);
         views.setImageViewResource(R.id.prev_button, R.drawable.ic_skip_previous_24dp);
         views.setTextColor(R.id.text2, textColor);
         views.setTextColor(R.id.text1, textColor);
 
-        int backgroundColor = mPrefs.getInt(ARG_WIDGET_BACKGROUND_COLOR + appWidgetId, ColorUtils.adjustAlpha(ContextCompat.getColor(context, R.color.white), 35 / 255f));
+        int backgroundColor = sharedPreferences.getInt(ARG_WIDGET_BACKGROUND_COLOR + appWidgetId, ColorUtils.adjustAlpha(ContextCompat.getColor(context, R.color.white), 35 / 255f));
         views.setInt(R.id.widget_layout_extra_large, "setBackgroundColor", backgroundColor);
-        int colorFilter = mPrefs.getInt(ARG_WIDGET_COLOR_FILTER + appWidgetId, -1);
+        int colorFilter = sharedPreferences.getInt(ARG_WIDGET_COLOR_FILTER + appWidgetId, -1);
         if (colorFilter != -1) {
             views.setInt(R.id.album_art, "setColorFilter", colorFilter);
         }
-        boolean showAlbumArt = mPrefs.getBoolean(ARG_WIDGET_SHOW_ARTWORK + appWidgetId, true);
+        boolean showAlbumArt = sharedPreferences.getBoolean(ARG_WIDGET_SHOW_ARTWORK + appWidgetId, true);
         if (!showAlbumArt) {
             views.setViewVisibility(R.id.album_art, View.GONE);
         }
@@ -79,7 +78,7 @@ public class WidgetProviderExtraLarge extends BaseWidgetProvider {
     }
 
     @Override
-    public void update(MusicService service, int[] appWidgetIds, boolean updateArtwork) {
+    public void update(MusicService service, SharedPreferences sharedPreferences, int[] appWidgetIds, boolean updateArtwork) {
 
         if (appWidgetIds == null) {
             return;
@@ -87,9 +86,9 @@ public class WidgetProviderExtraLarge extends BaseWidgetProvider {
 
         for (int appWidgetId : appWidgetIds) {
 
-            boolean showAlbumArt = mPrefs.getBoolean(ARG_WIDGET_SHOW_ARTWORK + appWidgetId, true);
+            boolean showAlbumArt = sharedPreferences.getBoolean(ARG_WIDGET_SHOW_ARTWORK + appWidgetId, true);
 
-            mLayoutId = mPrefs.getInt(ARG_EXTRA_LARGE_LAYOUT_ID + appWidgetId, R.layout.widget_layout_extra_large);
+            mLayoutId = sharedPreferences.getInt(ARG_EXTRA_LARGE_LAYOUT_ID + appWidgetId, R.layout.widget_layout_extra_large);
 
             final Resources res = service.getResources();
             final RemoteViews views = new RemoteViews(service.getPackageName(), mLayoutId);
@@ -132,10 +131,10 @@ public class WidgetProviderExtraLarge extends BaseWidgetProvider {
                 // No error, so show normal titles
                 views.setViewVisibility(R.id.text1, View.VISIBLE);
                 views.setTextViewText(R.id.text1, titleName);
-                views.setTextViewText(R.id.text2, artistName + " | " + albumName);
+                views.setTextViewText(R.id.text2, artistName + " • " + albumName);
             }
 
-            boolean invertIcons = mPrefs.getBoolean(ARG_WIDGET_INVERT_ICONS + appWidgetId, false);
+            boolean invertIcons = sharedPreferences.getBoolean(ARG_WIDGET_INVERT_ICONS + appWidgetId, false);
 
             // Set correct drawable for pause state
             final boolean isPlaying = service.isPlaying();
@@ -157,7 +156,7 @@ public class WidgetProviderExtraLarge extends BaseWidgetProvider {
 
             setupRepeatView(service, views, invertIcons);
 
-            int textColor = mPrefs.getInt(ARG_WIDGET_TEXT_COLOR + appWidgetId, ContextCompat.getColor(service, R.color.white));
+            int textColor = sharedPreferences.getInt(ARG_WIDGET_TEXT_COLOR + appWidgetId, ContextCompat.getColor(service, R.color.white));
             if (invertIcons) {
                 views.setImageViewBitmap(R.id.next_button, DrawableUtils.getBlackBitmap(service, R.drawable.ic_skip_next_24dp));
                 views.setImageViewBitmap(R.id.prev_button, DrawableUtils.getBlackBitmap(service, R.drawable.ic_skip_previous_24dp));
@@ -169,7 +168,7 @@ public class WidgetProviderExtraLarge extends BaseWidgetProvider {
             views.setTextColor(R.id.text2, textColor);
             views.setTextColor(R.id.text1, textColor);
 
-            int backgroundColor = mPrefs.getInt(ARG_WIDGET_BACKGROUND_COLOR + appWidgetId, ColorUtils.adjustAlpha(ContextCompat.getColor(service, R.color.white), 35 / 255f));
+            int backgroundColor = sharedPreferences.getInt(ARG_WIDGET_BACKGROUND_COLOR + appWidgetId, ColorUtils.adjustAlpha(ContextCompat.getColor(service, R.color.white), 35 / 255f));
             views.setInt(R.id.widget_layout_extra_large, "setBackgroundColor", backgroundColor);
 
             setupButtons(service, views, appWidgetId, getRootViewId());

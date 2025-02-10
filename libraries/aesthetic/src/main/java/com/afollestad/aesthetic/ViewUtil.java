@@ -12,10 +12,8 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
-
-import java.lang.reflect.Field;
-
 import io.reactivex.Observable;
+import java.lang.reflect.Field;
 
 import static com.afollestad.aesthetic.TintHelper.createTintedDrawable;
 import static com.afollestad.aesthetic.Util.isColorLight;

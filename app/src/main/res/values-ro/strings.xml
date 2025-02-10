@@ -32,8 +32,7 @@
     <string name="repeat_all_notif">Se repetă toate piesele.</string>
     <!-- Individual song context menu item -->
     <string name="ringtone_menu">Folosește ca ton de apel</string>
-    <!-- Toast after setting a song as phone ringtone -->
-    <string name="ringtone_set">„<xliff:g example="Alarm Bell" id="name">%s</xliff:g>” setat ca ton de apel.</string>
+    <!-- Toast after setting a song as phone ringtone.-->
     <!-- Toast if setting ringtone fails -->
     <!-- Toasts after adding song(s) to playlists -->
     <plurals name="NNNtrackstoplaylist">
@@ -114,7 +113,7 @@
     <!-- Delete confirmation dialog message when deleting artists -->
     <!-- Delete confirmation dialog when deleting an entire album -->
     <string name="delete_album_desc">Întregul album „<xliff:g id="album">%s</xliff:g>” va fi șters permanent.</string>
-    <!-- Delete confirmation dialog message when deleting albums -->
+    <!-- Delete confirmation dialog when deleting songs from unknown album/artist or songs whose name is unknown. -->
     <string name="get_pro_button_play_store">Magazin Play</string>
     <string name="get_pro_button_amazon">Amazon</string>
     <string name="delete_album_desc_multiple">Urmăroarele albume vor fi șterse permanent: <xliff:g id="album">%s</xliff:g>.</string>
@@ -179,7 +178,7 @@
     <string name="fav_title">Favorite</string>
     <!-- -->
     <string name="library_title">Bibliotecă</string>
-    <!-- -->
+    <!-- Lock Queue -->
     <!-- Library screen, menu item -->
     <string name="search_title">Caută</string>
     <!-- Playlist context menu item to clear the selected playlist. -->
@@ -267,10 +266,6 @@
     <string name="pref_title_ignore_folder_art">Ignoră coperțile din foldere</string>
     <!-- Settings summary for the embedded artwork checkbox-->
     <string name="pref_summary_ignore_folder_art">Nu căuta coperți stocate în directoarele tale de muzică</string>
-    <!-- Settings title for ignore folder artwork checkbox (whether the app can use local artwork for the album art -->
-    <string name="pref_title_prefer_lastfm">Alege coperți de pe Last.fm</string>
-    <!-- Settings summary for the embedded artwork checkbox-->
-    <string name="pref_summary_prefer_lastfm">Bifează această căsuță dacă preferi ca Shuttle să caute coperți pe Last.fm înainte de a căuta în serverele iTunes. (Doar pentru coperți de album)</string>
     <!-- Settings title for Artwork settings heading -->
     <string name="pref_string_title_artwork">Copertă</string>
     <!-- Settings title for the download artwork button -->
@@ -354,8 +349,6 @@
     <string name="pref_title_version">Versiunea</string>
     <string name="pref_title_faq">Întrebări Frecvente</string>
     <string name="pref_summary_faq">Ai o întrebare? Ai nevoie de ajutor? Click aici pentru a vedea întrebările frecvente pe www.shuttlemusicplayer.com</string>
-    <string name="pref_title_gplus">Ajutor</string>
-    <string name="pref_summary_gplus">Aceasta este o comunitate foarte activă de utilizatori Shuttle pe Google+. Dacă ai întrebari sau ai nevoie de ajutor, acesta este cel mai bun loc.</string>
     <string name="pref_title_rate">Spune mulțumesc</string>
     <string name="pref_summary_rate">Dacă îți place Shuttle, lasă o recenzie.</string>
     <!-- Settings title for ignore playlist duplicates -->

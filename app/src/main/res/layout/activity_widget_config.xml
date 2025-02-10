@@ -52,22 +52,26 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal">
 
-            <com.simplecity.amp_library.ui.views.CustomCheckbox
+            <android.support.v7.widget.AppCompatCheckBox
                 android:id="@+id/checkBox1"
                 android:layout_width="0dp"
                 android:layout_height="48dp"
                 android:layout_weight="1"
+                android:tag=":aesthetic_ignore"
                 android:checked="true"
+                android:text="@string/widget_show_artwork"
                 android:gravity="center_vertical"
-                android:text="@string/widget_show_artwork"/>
+                android:textColor="@color/black"/>
 
-            <com.simplecity.amp_library.ui.views.CustomCheckbox
+            <android.support.v7.widget.AppCompatCheckBox
                 android:id="@+id/checkBox2"
+                android:tag=":aesthetic_ignore"
                 android:layout_width="0dp"
                 android:layout_height="48dp"
+                android:text="@string/widget_invert_icons"
                 android:layout_weight="1"
                 android:gravity="center_vertical"
-                android:text="@string/widget_invert_icons"/>
+                android:textColor="@color/black"/>
 
         </LinearLayout>
 
@@ -81,8 +85,10 @@
                 android:layout_width="0dp"
                 android:layout_height="48dp"
                 android:layout_weight="1"
-                android:drawableLeft="@drawable/bg_rounded"
+                android:drawablePadding="8dp"
+                android:drawableStart="@drawable/bg_rounded"
                 android:padding="8dp"
+                android:gravity="center_vertical|start"
                 android:stateListAnimator="@null"
                 android:tag=":aesthetic_ignore"
                 android:text="@string/widget_background_color"
@@ -92,9 +98,11 @@
                 android:id="@+id/btn_text_color"
                 android:layout_width="0dp"
                 android:layout_height="48dp"
+                android:drawablePadding="8dp"
                 android:layout_weight="1"
-                android:drawableLeft="@drawable/bg_rounded"
+                android:drawableStart="@drawable/bg_rounded"
                 android:padding="8dp"
+                android:gravity="center_vertical|start"
                 android:stateListAnimator="@null"
                 android:tag=":aesthetic_ignore"
                 android:text="@string/widget_text_color"
@@ -119,14 +127,14 @@
 
             <com.simplecity.amp_library.ui.views.SizableSeekBar
                 android:id="@+id/seekBar1"
-                style="@style/SeekBar"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
                 android:layout_weight="1"
                 android:indeterminate="false"
                 android:max="255"
-                android:progress="218"/>
+                android:progress="218"
+                style="@style/SeekBar"/>
         </LinearLayout>
 
         <View

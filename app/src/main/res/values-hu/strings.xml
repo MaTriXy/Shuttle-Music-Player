@@ -32,8 +32,7 @@
     <string name="repeat_all_notif">Az összes dal ismétlése.</string>
     <!-- Individual song context menu item -->
     <string name="ringtone_menu">Beállítás csengőhangnak</string>
-    <!-- Toast after setting a song as phone ringtone -->
-    <string name="ringtone_set">\"<xliff:g example="Alarm Bell" id="name">%s</xliff:g>\" beállítás csengőhangnak.</string>
+    <!-- Toast after setting a song as phone ringtone.-->
     <!-- Toast if setting ringtone fails -->
     <!-- Toasts after adding song(s) to playlists -->
     <plurals name="NNNtrackstoplaylist">
@@ -114,7 +113,7 @@
     <string name="delete_album_artist_desc_multiple"><xliff:g id="album-artist">%s</xliff:g> előadótól minden dal törölve lesz.</string>
     <!-- Delete confirmation dialog when deleting an entire album -->
     <string name="delete_album_desc">A teljes <xliff:g id="album">%s</xliff:g> album véglegesen törlésre kerül a memóriakártyáról.</string>
-    <!-- Delete confirmation dialog message when deleting albums -->
+    <!-- Delete confirmation dialog when deleting songs from unknown album/artist or songs whose name is unknown. -->
     <string name="get_pro_button_play_store">Play Áruház</string>
     <string name="get_pro_button_amazon">Amazon</string>
     <string name="delete_album_desc_multiple">A következő albumok véglegesen törlésre kerülnek: <xliff:g id="album">%s</xliff:g></string>
@@ -185,7 +184,7 @@
     <string name="fav_title">Kedvencek</string>
     <!-- -->
     <string name="library_title">Saját könyvtár</string>
-    <!-- -->
+    <!-- Lock Queue -->
     <!-- Library screen, menu item -->
     <string name="search_title">Keresés</string>
     <string name="search_filter">Szűrés</string>
@@ -275,10 +274,6 @@
     <string name="pref_title_ignore_folder_art">Mappákban levő borítóképek mellőzése</string>
     <!-- Settings summary for the embedded artwork checkbox-->
     <string name="pref_summary_ignore_folder_art">Figyelmen kívül hagyja a dalok mappáiban található borítóképeket</string>
-    <!-- Settings title for ignore folder artwork checkbox (whether the app can use local artwork for the album art -->
-    <string name="pref_title_prefer_lastfm">Last.fm borítóképek preferálása</string>
-    <!-- Settings summary for the embedded artwork checkbox-->
-    <string name="pref_summary_prefer_lastfm">Ha engedélyezi, előnyben részesíti a Last.fm borítóképeit az iTunes szerverein találhatókkal. (Csak album borítóképekre vonatkozik)</string>
     <!-- Settings title for Artwork settings heading -->
     <string name="pref_string_title_artwork">Borító</string>
     <!-- Settings title for the download artwork button -->
@@ -365,8 +360,6 @@ segítségével
     <string name="pref_title_version">Verzió</string>
     <string name="pref_title_faq">GYIK</string>
     <string name="pref_summary_faq">Kérdése van? Segítségre van szüksége? GYIK a www.shuttlemusicplayer.com -on</string>
-    <string name="pref_title_gplus">Segítség</string>
-    <string name="pref_summary_gplus">Aktív közösség foglalkozik a Shuttle-el a Google+-on. Ha kérdése van vagy segítségre van szüksége ez a legjobb hely ahova fordulhat.</string>
     <string name="pref_title_rate">Mondjon köszönetet</string>
     <string name="pref_summary_rate">Ha tetszik a Shuttle, kérem hagyjon róla egy értékelést</string>
     <!-- Settings title for ignore playlist duplicates -->
@@ -661,8 +654,6 @@ segítségével
     <!-- Artwork picker -->
     <string name="artwork_type_media_store">Médiatár</string>
     <string name="artwork_type_tag">Címke</string>
-    <string name="artwork_type_lastfm">Last.FM</string>
-    <string name="artwork_type_itunes">iTunes</string>
     <string name="artwork_type_custom">Egyéni</string>
     <string name="artwork_gallery">Galéria</string>
     <!-- Launcher Shortcuts -->

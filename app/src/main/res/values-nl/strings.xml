@@ -32,8 +32,8 @@
     <string name="repeat_all_notif">Alle nummers herhalen</string>
     <!-- Individual song context menu item -->
     <string name="ringtone_menu">Gebruiken als beltoon</string>
-    <!-- Toast after setting a song as phone ringtone -->
-    <string name="ringtone_set">\"<xliff:g example="Alarm Bell" id="name">%s</xliff:g>\" ingesteld als beltoon.</string>
+    <!-- Toast after setting a song as phone ringtone.-->
+    <string name="ringtone_set_new">Beltoon ingesteld.</string>
     <!-- Toast if setting ringtone fails -->
     <string name="ringtone_set_failed">Kan beltoon niet instellen</string>
     <!-- Toasts after adding song(s) to playlists -->
@@ -114,7 +114,8 @@
     <string name="delete_album_artist_desc_multiple">Alle  nummers van de volgende albumartiesten:<xliff:g id="album-artist">%s</xliff:g>worden permanent verwijderd.</string>
     <!-- Delete confirmation dialog when deleting an entire album -->
     <string name="delete_album_desc">Alle nummers van het album <xliff:g id="album">%s</xliff:g> worden permanent verwijderd.</string>
-    <!-- Delete confirmation dialog message when deleting albums -->
+    <!-- Delete confirmation dialog when deleting songs from unknown album/artist or songs whose name is unknown. -->
+    <string name="delete_songs_unknown">Geselecteerde nummers worden permanent verwijderd.</string>
     <string name="get_pro_button_play_store">Play Store</string>
     <string name="get_pro_button_amazon">Amazon</string>
     <string name="delete_album_desc_multiple">Alle nummers van de volgende albums:<xliff:g id="album">%s</xliff:g>worden permanent verwijderd.</string>
@@ -150,6 +151,9 @@
     <string name="dialog_button_playlist_duplicate_skip">Overslaan</string>
     <!-- Checkbox text 'always add duplicates' -->
     <string name="dialog_checkbox_playlist_duplicate_always_add">Altijd dubbelingen toevoegen</string>
+    <string name="dialog_title_playlist_delete">Afspeellijst verwijderen?</string>
+    <string name="dialog_message_playlist_delete"><xliff:g id="playlist">%s</xliff:g> wordt permanent verwijderd</string>
+    <string name="dialog_button_delete">Verwijderen</string>
     <!-- ## Widgets ## -->
     <!-- Checkbox text to invert colors of buttons & text -->
     <string name="widget_background_color">Achtergrond</string>
@@ -192,7 +196,9 @@
     <string name="fav_title">Favorieten</string>
     <!-- -->
     <string name="library_title">Bibliotheek</string>
-    <!-- -->
+    <!-- Lock Queue -->
+    <string name="menu_queue_swipe_enable">Swipen inschakelen</string>
+    <string name="menu_queue_swipe_disable">Swipen uitschakelen</string>
     <!-- Library screen, menu item -->
     <string name="search_title">Zoeken</string>
     <string name="search_filter">Filter</string>
@@ -288,10 +294,6 @@
     <string name="pref_title_ignore_folder_art">Illustraties in mappen negeren</string>
     <!-- Settings summary for the embedded artwork checkbox-->
     <string name="pref_summary_ignore_folder_art">Niet zoeken naar albumillustraties die zijn opgeslagen in de muziekmappen.</string>
-    <!-- Settings title for ignore folder artwork checkbox (whether the app can use local artwork for the album art -->
-    <string name="pref_title_prefer_lastfm">Bij voorkeur Last.fm-illustraties</string>
-    <!-- Settings summary for the embedded artwork checkbox-->
-    <string name="pref_summary_prefer_lastfm">Aanvinken als je wil dat Shuttle voor albumillustraties eerst op Last.fm kijkt, voordat er gezocht wordt op iTunes-servers.</string>
     <!-- Settings title for Artwork settings heading -->
     <string name="pref_string_title_artwork">Illustraties</string>
     <!-- Settings title for the download artwork button -->
@@ -382,8 +384,6 @@ Indien uitgeschakeld wordt het Shuttle-icoon als plaatshouder gebruikt</string>
     <string name="pref_title_version">Versie</string>
     <string name="pref_title_faq">FAQ</string>
     <string name="pref_summary_faq">Heb je een vraag of hulp nodig? Klik hier om de FAQ te zien op www.shuttlemusicplayer.com</string>
-    <string name="pref_title_gplus">Hulp krijgen</string>
-    <string name="pref_summary_gplus">Er is een actieve gemeenschap van Shuttle-gebruikers op Google+. Als je vragen hebt of hulp nodig hebt, is dit de beste plek om naar toe te gaan.</string>
     <string name="pref_title_rate">Zeg bedankt</string>
     <string name="pref_summary_rate">Als je Shuttle leuk vindt, overweeg dan om een beoordeling achter te laten.</string>
     <string name="pref_title_headset_beep">Beep bij skippen</string>
@@ -436,7 +436,7 @@ Indien uitgeschakeld wordt het Shuttle-icoon als plaatshouder gebruikt</string>
     <!-- Button text for saving tags  -->
     <string name="save">Opslaan</string>
     <!-- Message displayed when tag editing fails -->
-    <string name="tag_error">Er is een fout opgetreden bij het bewerken van tags.</string>
+    <string name="tag_error">Er is een fout opgetreden bij het bewerken van tags. Als het bestand is opgeslagen op een SD-kaart, heeft Shuttle mogelijk geen toegangsrechten.</string>
     <string name="tag_editor_document_tree_message">Vanwege wijzigingen in Android 5.0, vereist Google nu om aan te geven in welke mappen op de SD-kaart een app bestanden mag bewerken.\n\nShuttle zal nu een bestandenzoeker openen. Kies daarin de hoofdmap van de bestanden die je wilt bewerken.</string>
     <string name="tag_editor_check_permission">Controleren op rechten. Dit kan even duren...\n\nGeef Google maar de schuld!</string>
     <string name="tag_editor_document_tree_permission_failed">Het lijkt erop dan Shuttle nog steeds geen rechten heeft om de bestanden te bewerken. Controleer de map in de bestandenzoeker.</string>
@@ -463,6 +463,9 @@ map "</item>
     <!-- -->
     <string name="show_filenames">Laat bestandsnamen zien</string>
     <!-- -->
+    <string name="set_home_dir">Homemap instellen</string>
+    <string name="remove_home_dir">Homemap verwijderen</string>
+    <string name="nav_home_dir">Naar homemap navigeren</string>
     <!-- 'Scan'-->
     <string name="scan_file">Scannen</string>
     <!-- Scan Complete-->
@@ -693,8 +696,6 @@ map "</item>
     <string name="artwork_edit">Illustraties kiezen</string>
     <string name="artwork_type_media_store">Media Store</string>
     <string name="artwork_type_tag">Label</string>
-    <string name="artwork_type_lastfm">Last.FM</string>
-    <string name="artwork_type_itunes">iTunes</string>
     <string name="artwork_type_custom">Aangepast</string>
     <string name="artwork_gallery">Galerij</string>
     <!-- Launcher Shortcuts -->
@@ -742,4 +743,8 @@ map "</item>
     <!-- Displayed at the top of the album list, album shuffle mode-->
     <string name="shuffle_albums">Albumshuffle</string>
     <!-- Storage Access Framework (Used when deleting files from SD CarD)-->
+    <string name="saf_access_required_title">Toegang tot opslag nodig</string>
+    <string name="saf_access_required_message">Shuttle heeft toestemming nodig voor toegang tot deze bestanden. Kies de map die jouw muziek bevat.</string>
+    <string name="saf_show_files_button">Bestanden tonen</string>
+    <string name="notification_text_shuttle_running">Shuttle service draait…</string>
 </resources>

@@ -1,15 +1,17 @@
 package com.simplecity.amp_library.utils;
 
+import android.content.Context;
 import android.graphics.Color;
+import com.simplecity.amp_library.ShuttleApplication;
 
 public class ColorPalette {
 
-    public static int[] getPrimaryColors() {
-        return ShuttleUtils.isUpgraded() ? PRIMARY_COLORS : PRIMARY_COLORS_FREE;
+    public static int[] getPrimaryColors(Context context, SettingsManager settingsManager) {
+        return ShuttleUtils.isUpgraded((ShuttleApplication) context.getApplicationContext(), settingsManager) ? PRIMARY_COLORS : PRIMARY_COLORS_FREE;
     }
 
-    public static int[][] getPrimaryColorsSub() {
-        return ShuttleUtils.isUpgraded() ? PRIMARY_COLORS_SUB : PRIMARY_COLORS_SUB_FREE;
+    public static int[][] getPrimaryColorsSub(Context context, SettingsManager settingsManager) {
+        return ShuttleUtils.isUpgraded((ShuttleApplication) context.getApplicationContext(), settingsManager) ? PRIMARY_COLORS_SUB : PRIMARY_COLORS_SUB_FREE;
     }
 
     private final static int[] PRIMARY_COLORS = new int[] {
@@ -36,8 +38,8 @@ public class ColorPalette {
 
     private final static int[][] PRIMARY_COLORS_SUB = new int[][] {
             new int[] {
-                    //                    Color.parseColor("#FFEBEE"),
-                    //                    Color.parseColor("#FFCDD2"),
+                    Color.parseColor("#FFEBEE"),
+                    Color.parseColor("#FFCDD2"),
                     Color.parseColor("#EF9A9A"),
                     Color.parseColor("#E57373"),
                     Color.parseColor("#EF5350"),
@@ -48,8 +50,8 @@ public class ColorPalette {
                     Color.parseColor("#B71C1C")
             },
             new int[] {
-                    //                    Color.parseColor("#FCE4EC"),
-                    //                    Color.parseColor("#F8BBD0"),
+                    Color.parseColor("#FCE4EC"),
+                    Color.parseColor("#F8BBD0"),
                     Color.parseColor("#F48FB1"),
                     Color.parseColor("#F06292"),
                     Color.parseColor("#EC407A"),
@@ -60,8 +62,8 @@ public class ColorPalette {
                     Color.parseColor("#880E4F")
             },
             new int[] {
-                    //                    Color.parseColor("#F3E5F5"),
-                    //                    Color.parseColor("#E1BEE7"),
+                    Color.parseColor("#F3E5F5"),
+                    Color.parseColor("#E1BEE7"),
                     Color.parseColor("#CE93D8"),
                     Color.parseColor("#BA68C8"),
                     Color.parseColor("#AB47BC"),
@@ -72,8 +74,8 @@ public class ColorPalette {
                     Color.parseColor("#4A148C")
             },
             new int[] {
-                    //                    Color.parseColor("#EDE7F6"),
-                    //                    Color.parseColor("#D1C4E9"),
+                    Color.parseColor("#EDE7F6"),
+                    Color.parseColor("#D1C4E9"),
                     Color.parseColor("#B39DDB"),
                     Color.parseColor("#9575CD"),
                     Color.parseColor("#7E57C2"),
@@ -84,8 +86,8 @@ public class ColorPalette {
                     Color.parseColor("#311B92")
             },
             new int[] {
-                    //                    Color.parseColor("#E8EAF6"),
-                    //                    Color.parseColor("#C5CAE9"),
+                    Color.parseColor("#E8EAF6"),
+                    Color.parseColor("#C5CAE9"),
                     Color.parseColor("#9FA8DA"),
                     Color.parseColor("#7986CB"),
                     Color.parseColor("#5C6BC0"),
@@ -96,8 +98,8 @@ public class ColorPalette {
                     Color.parseColor("#1A237E")
             },
             new int[] {
-                    //                    Color.parseColor("#E3F2FD"),
-                    //                    Color.parseColor("#BBDEFB"),
+                    Color.parseColor("#E3F2FD"),
+                    Color.parseColor("#BBDEFB"),
                     Color.parseColor("#90CAF9"),
                     Color.parseColor("#64B5F6"),
                     Color.parseColor("#42A5F5"),
@@ -108,8 +110,8 @@ public class ColorPalette {
                     Color.parseColor("#0D47A1")
             },
             new int[] {
-                    //                    Color.parseColor("#E1F5FE"),
-                    //                    Color.parseColor("#B3E5FC"),
+                    Color.parseColor("#E1F5FE"),
+                    Color.parseColor("#B3E5FC"),
                     Color.parseColor("#81D4FA"),
                     Color.parseColor("#4FC3F7"),
                     Color.parseColor("#29B6F6"),
@@ -120,8 +122,8 @@ public class ColorPalette {
                     Color.parseColor("#01579B")
             },
             new int[] {
-                    //                    Color.parseColor("#E0F7FA"),
-                    //                    Color.parseColor("#B2EBF2"),
+                    Color.parseColor("#E0F7FA"),
+                    Color.parseColor("#B2EBF2"),
                     Color.parseColor("#80DEEA"),
                     Color.parseColor("#4DD0E1"),
                     Color.parseColor("#26C6DA"),
@@ -132,8 +134,8 @@ public class ColorPalette {
                     Color.parseColor("#006064")
             },
             new int[] {
-                    //                    Color.parseColor("#E0F2F1"),
-                    //                    Color.parseColor("#B2DFDB"),
+                    Color.parseColor("#E0F2F1"),
+                    Color.parseColor("#B2DFDB"),
                     Color.parseColor("#80CBC4"),
                     Color.parseColor("#4DB6AC"),
                     Color.parseColor("#26A69A"),
@@ -144,8 +146,8 @@ public class ColorPalette {
                     Color.parseColor("#004D40")
             },
             new int[] {
-                    //                    Color.parseColor("#E8F5E9"),
-                    //                    Color.parseColor("#C8E6C9"),
+                    Color.parseColor("#E8F5E9"),
+                    Color.parseColor("#C8E6C9"),
                     Color.parseColor("#A5D6A7"),
                     Color.parseColor("#81C784"),
                     Color.parseColor("#66BB6A"),
@@ -156,8 +158,8 @@ public class ColorPalette {
                     Color.parseColor("#1B5E20")
             },
             new int[] {
-                    //                    Color.parseColor("#F1F8E9"),
-                    //                    Color.parseColor("#DCEDC8"),
+                    Color.parseColor("#F1F8E9"),
+                    Color.parseColor("#DCEDC8"),
                     Color.parseColor("#C5E1A5"),
                     Color.parseColor("#AED581"),
                     Color.parseColor("#9CCC65"),
@@ -168,8 +170,8 @@ public class ColorPalette {
                     Color.parseColor("#33691E")
             },
             new int[] {
-                    //                    Color.parseColor("#F9FBE7"),
-                    //                    Color.parseColor("#F0F4C3"),
+                    Color.parseColor("#F9FBE7"),
+                    Color.parseColor("#F0F4C3"),
                     Color.parseColor("#E6EE9C"),
                     Color.parseColor("#DCE775"),
                     Color.parseColor("#D4E157"),
@@ -180,8 +182,8 @@ public class ColorPalette {
                     Color.parseColor("#827717")
             },
             new int[] {
-                    //                    Color.parseColor("#FFFDE7"),
-                    //                    Color.parseColor("#FFF9C4"),
+                    Color.parseColor("#FFFDE7"),
+                    Color.parseColor("#FFF9C4"),
                     Color.parseColor("#FFF59D"),
                     Color.parseColor("#FFF176"),
                     Color.parseColor("#FFEE58"),
@@ -192,8 +194,8 @@ public class ColorPalette {
                     Color.parseColor("#F57F17")
             },
             new int[] {
-                    //                    Color.parseColor("#FFF8E1"),
-                    //                    Color.parseColor("#FFECB3"),
+                    Color.parseColor("#FFF8E1"),
+                    Color.parseColor("#FFECB3"),
                     Color.parseColor("#FFE082"),
                     Color.parseColor("#FFD54F"),
                     Color.parseColor("#FFCA28"),
@@ -204,8 +206,8 @@ public class ColorPalette {
                     Color.parseColor("#FF6F00")
             },
             new int[] {
-                    //                    Color.parseColor("#FFF3E0"),
-                    //                    Color.parseColor("#FFE0B2"),
+                    Color.parseColor("#FFF3E0"),
+                    Color.parseColor("#FFE0B2"),
                     Color.parseColor("#FFCC80"),
                     Color.parseColor("#FFB74D"),
                     Color.parseColor("#FFA726"),
@@ -216,8 +218,8 @@ public class ColorPalette {
                     Color.parseColor("#E65100")
             },
             new int[] {
-                    //                    Color.parseColor("#FBE9E7"),
-                    //                    Color.parseColor("#FFCCBC"),
+                    Color.parseColor("#FBE9E7"),
+                    Color.parseColor("#FFCCBC"),
                     Color.parseColor("#FFAB91"),
                     Color.parseColor("#FF8A65"),
                     Color.parseColor("#FF7043"),
@@ -228,8 +230,8 @@ public class ColorPalette {
                     Color.parseColor("#BF360C")
             },
             new int[] {
-                    //                    Color.parseColor("#EFEBE9"),
-                    //                    Color.parseColor("#D7CCC8"),
+                    Color.parseColor("#EFEBE9"),
+                    Color.parseColor("#D7CCC8"),
                     Color.parseColor("#BCAAA4"),
                     Color.parseColor("#A1887F"),
                     Color.parseColor("#8D6E63"),
@@ -240,10 +242,10 @@ public class ColorPalette {
                     Color.parseColor("#3E2723")
             },
             new int[] {
-                    //                    Color.parseColor("#FAFAFA"),
-                    //                    Color.parseColor("#F5F5F5"),
-                    //                    Color.parseColor("#EEEEEE"),
-                    //                    Color.parseColor("#E0E0E0"),
+                    Color.parseColor("#FAFAFA"),
+                    Color.parseColor("#F5F5F5"),
+                    Color.parseColor("#EEEEEE"),
+                    Color.parseColor("#E0E0E0"),
                     Color.parseColor("#BDBDBD"),
                     Color.parseColor("#9E9E9E"),
                     Color.parseColor("#757575"),
@@ -252,8 +254,8 @@ public class ColorPalette {
                     Color.parseColor("#212121")
             },
             new int[] {
-                    //                    Color.parseColor("#ECEFF1"),
-                    //                    Color.parseColor("#CFD8DC"),
+                    Color.parseColor("#ECEFF1"),
+                    Color.parseColor("#CFD8DC"),
                     Color.parseColor("#B0BEC5"),
                     Color.parseColor("#90A4AE"),
                     Color.parseColor("#78909C"),
@@ -277,8 +279,8 @@ public class ColorPalette {
 
     private final static int[][] PRIMARY_COLORS_SUB_FREE = new int[][] {
             new int[] {
-                    //                    Color.parseColor("#FFEBEE"),
-                    //                    Color.parseColor("#FFCDD2"),
+                    Color.parseColor("#FFEBEE"),
+                    Color.parseColor("#FFCDD2"),
                     Color.parseColor("#EF9A9A"),
                     Color.parseColor("#E57373"),
                     Color.parseColor("#EF5350"),
@@ -289,8 +291,8 @@ public class ColorPalette {
                     Color.parseColor("#B71C1C")
             },
             new int[] {
-                    //                    Color.parseColor("#F3E5F5"),
-                    //                    Color.parseColor("#E1BEE7"),
+                    Color.parseColor("#F3E5F5"),
+                    Color.parseColor("#E1BEE7"),
                     Color.parseColor("#CE93D8"),
                     Color.parseColor("#BA68C8"),
                     Color.parseColor("#AB47BC"),
@@ -301,8 +303,8 @@ public class ColorPalette {
                     Color.parseColor("#4A148C")
             },
             new int[] {
-                    //                    Color.parseColor("#E1F5FE"),
-                    //                    Color.parseColor("#B3E5FC"),
+                    Color.parseColor("#E1F5FE"),
+                    Color.parseColor("#B3E5FC"),
                     Color.parseColor("#81D4FA"),
                     Color.parseColor("#4FC3F7"),
                     Color.parseColor("#29B6F6"),
@@ -313,8 +315,8 @@ public class ColorPalette {
                     Color.parseColor("#01579B")
             },
             new int[] {
-                    //                    Color.parseColor("#E0F2F1"),
-                    //                    Color.parseColor("#B2DFDB"),
+                    Color.parseColor("#E0F2F1"),
+                    Color.parseColor("#B2DFDB"),
                     Color.parseColor("#80CBC4"),
                     Color.parseColor("#4DB6AC"),
                     Color.parseColor("#26A69A"),
@@ -325,8 +327,8 @@ public class ColorPalette {
                     Color.parseColor("#004D40")
             },
             new int[] {
-                    //                    Color.parseColor("#E8F5E9"),
-                    //                    Color.parseColor("#C8E6C9"),
+                    Color.parseColor("#E8F5E9"),
+                    Color.parseColor("#C8E6C9"),
                     Color.parseColor("#A5D6A7"),
                     Color.parseColor("#81C784"),
                     Color.parseColor("#66BB6A"),
@@ -337,8 +339,8 @@ public class ColorPalette {
                     Color.parseColor("#1B5E20")
             },
             new int[] {
-                    //                    Color.parseColor("#FFF8E1"),
-                    //                    Color.parseColor("#FFECB3"),
+                    Color.parseColor("#FFF8E1"),
+                    Color.parseColor("#FFECB3"),
                     Color.parseColor("#FFE082"),
                     Color.parseColor("#FFD54F"),
                     Color.parseColor("#FFCA28"),
@@ -349,10 +351,10 @@ public class ColorPalette {
                     Color.parseColor("#FF6F00")
             },
             new int[] {
-                    //                    Color.parseColor("#FAFAFA"),
-                    //                    Color.parseColor("#F5F5F5"),
-                    //                    Color.parseColor("#EEEEEE"),
-                    //                    Color.parseColor("#E0E0E0"),
+                    Color.parseColor("#FAFAFA"),
+                    Color.parseColor("#F5F5F5"),
+                    Color.parseColor("#EEEEEE"),
+                    Color.parseColor("#E0E0E0"),
                     Color.parseColor("#BDBDBD"),
                     Color.parseColor("#9E9E9E"),
                     Color.parseColor("#757575"),

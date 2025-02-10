@@ -14,10 +14,12 @@ import android.support.v4.app.DialogFragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.provider.DocumentFile;
 import android.widget.Toast;
+import com.afollestad.materialdialogs.MaterialDialog;
 import com.annimon.stream.Collectors;
 import com.annimon.stream.Stream;
 import com.annimon.stream.function.Supplier;
 import com.simplecity.amp_library.R;
+import com.simplecity.amp_library.data.Repository;
 import com.simplecity.amp_library.model.Album;
 import com.simplecity.amp_library.model.AlbumArtist;
 import com.simplecity.amp_library.model.Song;
@@ -25,9 +27,11 @@ import com.simplecity.amp_library.playback.MediaManager;
 import com.simplecity.amp_library.saf.SafManager;
 import com.simplecity.amp_library.sql.providers.PlayCountTable;
 import com.simplecity.amp_library.utils.CustomMediaScanner;
-import com.simplecity.amp_library.utils.DialogUtils;
 import com.simplecity.amp_library.utils.LogUtils;
+import com.simplecity.amp_library.utils.SettingsManager;
+import com.simplecity.amp_library.utils.extensions.AlbumExtKt;
 import com.simplecity.amp_library.utils.extensions.SongExtKt;
+import dagger.android.support.AndroidSupportInjection;
 import io.reactivex.Completable;
 import io.reactivex.Observable;
 import io.reactivex.Single;
@@ -69,6 +73,12 @@ public class DeleteDialog extends DialogFragment implements SafManager.SafDialog
 
     @Inject
     MediaManager mediaManager;
+
+    @Inject
+    Repository.SongsRepository songsRepository;
+
+    @Inject
+    SettingsManager settingsManager;
 
     private List<AlbumArtist> artists;
     private List<Album> albums;
@@ -121,6 +131,7 @@ public class DeleteDialog extends DialogFragment implements SafManager.SafDialog
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        AndroidSupportInjection.inject(this);
         super.onCreate(savedInstanceState);
 
         deleteMessageId = getArguments().getInt(ARG_DELETE_MESSAGE_ID);
@@ -144,10 +155,9 @@ public class DeleteDialog extends DialogFragment implements SafManager.SafDialog
         }
     }
 
+    @NonNull
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
-
-        String stringToFormat = getString(deleteMessageId);
 
         List<String> names = new ArrayList<>();
         switch (type) {
@@ -162,19 +172,20 @@ public class DeleteDialog extends DialogFragment implements SafManager.SafDialog
                 break;
         }
 
-        String nameString;
-        if (names.size() > 1) {
-            stringToFormat = getString(deleteMessageId);
-            nameString = Stream.of(names)
-                    .map(itemName -> "\n\u2022 " + itemName)
-                    .collect(Collectors.joining()) + "\n";
+        String message;
+        if (names.isEmpty()) {
+            message = getString(R.string.delete_songs_unknown);
         } else {
-            nameString = names.get(0);
+            if (names.size() > 1) {
+                message = String.format(getString(deleteMessageId), Stream.of(names)
+                        .map(itemName -> "\n\u2022 " + itemName)
+                        .collect(Collectors.joining()) + "\n");
+            } else {
+                message = String.format(getString(deleteMessageId), names.get(0));
+            }
         }
 
-        String message = String.format(stringToFormat, nameString);
-
-        return DialogUtils.getBuilder(getContext())
+        return new MaterialDialog.Builder(getContext())
                 .iconRes(R.drawable.ic_warning_24dp)
                 .title(R.string.delete_item)
                 .content(message)
@@ -205,13 +216,13 @@ public class DeleteDialog extends DialogFragment implements SafManager.SafDialog
         switch (type) {
             case Type.ARTISTS:
                 return Observable.fromIterable(artists)
-                        .flatMapSingle(AlbumArtist::getSongsSingle)
+                        .flatMapSingle(albumArtist -> albumArtist.getSongsSingle(songsRepository))
                         .reduce(Collections.<Song>emptyList(), (songs, songs2) -> Stream.concat(Stream.of(songs), Stream.of(songs2)).toList())
                         .subscribeOn(Schedulers.io())
                         .observeOn(AndroidSchedulers.mainThread());
             case Type.ALBUMS:
                 return Observable.fromIterable(albums)
-                        .flatMapSingle(Album::getSongsSingle)
+                        .flatMapSingle(album -> AlbumExtKt.getSongsSingle(album, songsRepository))
                         .reduce(Collections.<Song>emptyList(), (songs, songs2) -> Stream.concat(Stream.of(songs), Stream.of(songs2)).toList())
                         .subscribeOn(Schedulers.io())
                         .observeOn(AndroidSchedulers.mainThread());
@@ -230,7 +241,7 @@ public class DeleteDialog extends DialogFragment implements SafManager.SafDialog
         disposables.add(getSongs().map(songs -> {
             // Keep track of the songs we want to delete, for later.
             Stream.of(songs).forEach(song -> {
-                if (SafManager.getInstance().requiresPermission(new File(song.path))) {
+                if (SafManager.getInstance(getContext(), settingsManager).requiresPermission(new File(song.path))) {
                     songsForSafDeletion.add(song);
                 } else {
                     songsForNormalDeletion.add(song);
@@ -241,7 +252,7 @@ public class DeleteDialog extends DialogFragment implements SafManager.SafDialog
             if (!songsForSafDeletion.isEmpty()) {
                 // We're gonna need SAF access to delete some songs.
                 // We may be able to build a list of document files if the user has been here before..
-                List<DocumentFile> documentFiles = SafManager.getInstance().getWriteableDocumentFiles(Stream.of(songsForSafDeletion)
+                List<DocumentFile> documentFiles = SafManager.getInstance(getContext(), settingsManager).getWriteableDocumentFiles(Stream.of(songsForSafDeletion)
                         .map(song -> new File(song.path))
                         .toList());
 
@@ -258,21 +269,30 @@ public class DeleteDialog extends DialogFragment implements SafManager.SafDialog
                 .subscribeOn(Schedulers.io())
                 .subscribe(requiresSafDialog -> {
                     if (requiresSafDialog) {
-                        SafManager.SafDialog.show(DeleteDialog.this);
+                        if (DeleteDialog.this.isAdded()) {
+                            SafManager.SafDialog.show(DeleteDialog.this);
+                        } else {
+                            LogUtils.logException(TAG, "Failed to delete songs.. Couldn't show SAFDialog", null);
+                            Toast.makeText(getContext(), getString(R.string.delete_songs_failure_toast), Toast.LENGTH_SHORT).show();
+                        }
                     } else {
                         disposables.add(deleteSongs()
                                 .observeOn(AndroidSchedulers.mainThread())
                                 .subscribeOn(Schedulers.io())
                                 .subscribe(deletedSongs -> {
-                                    if (deletedSongs > 0) {
-                                        Toast.makeText(getContext(), getString(R.string.delete_songs_success_toast, deletedSongs), Toast.LENGTH_SHORT).show();
-                                    } else {
-                                        Toast.makeText(getContext(), getString(R.string.delete_songs_failure_toast), Toast.LENGTH_SHORT).show();
+                                    if (DeleteDialog.this.isAdded()) {
+                                        if (deletedSongs > 0) {
+                                            Toast.makeText(getContext(), getString(R.string.delete_songs_success_toast, deletedSongs), Toast.LENGTH_SHORT).show();
+                                        } else {
+                                            Toast.makeText(getContext(), getString(R.string.delete_songs_failure_toast), Toast.LENGTH_SHORT).show();
+                                        }
+                                        dismiss();
                                     }
-                                    dismiss();
                                 }, error -> {
                                     LogUtils.logException(TAG, "Failed to delete songs", error);
-                                    Toast.makeText(getContext(), getString(R.string.delete_songs_failure_toast), Toast.LENGTH_SHORT).show();
+                                    if (DeleteDialog.this.isAdded()) {
+                                        Toast.makeText(getContext(), getString(R.string.delete_songs_failure_toast), Toast.LENGTH_SHORT).show();
+                                    }
                                 }));
                     }
                 }, error -> LogUtils.logException(TAG, "Failed to delete songs", error)));
@@ -305,7 +325,7 @@ public class DeleteDialog extends DialogFragment implements SafManager.SafDialog
         }
 
         // Remove songs from current play queue
-        mediaManager.removeFromQueue(deletedSongs);
+        mediaManager.removeSongsFromQueue(deletedSongs);
 
         // Remove songs from play count table
         ArrayList<ContentProviderOperation> operations = Stream.of(deletedSongs).map(song -> ContentProviderOperation
@@ -319,7 +339,7 @@ public class DeleteDialog extends DialogFragment implements SafManager.SafDialog
             e.printStackTrace();
         }
 
-        CustomMediaScanner.scanFiles(Stream.of(deletedSongs)
+        CustomMediaScanner.scanFiles(getContext(), Stream.of(deletedSongs)
                 .map(song -> song.path)
                 .toList(), null);
     }
@@ -328,7 +348,7 @@ public class DeleteDialog extends DialogFragment implements SafManager.SafDialog
     @Override
     public void onResult(@Nullable Uri treeUri) {
         if (treeUri != null) {
-            disposables.add(Completable.fromAction(() -> documentFilesForDeletion = SafManager.getInstance().getWriteableDocumentFiles(Stream.of(songsForSafDeletion)
+            disposables.add(Completable.fromAction(() -> documentFilesForDeletion = SafManager.getInstance(getContext(), settingsManager).getWriteableDocumentFiles(Stream.of(songsForSafDeletion)
                     .map(song -> new File(song.path))
                     .toList()))
                     .andThen(deleteSongs())

@@ -1,7 +1,6 @@
 package com.simplecity.amp_library;
 
 import android.Manifest;
-import android.app.Application;
 import android.content.ContentProviderOperation;
 import android.content.ContentUris;
 import android.content.ContentValues;
@@ -15,20 +14,15 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.preference.PreferenceManager;
 import android.text.TextUtils;
 import android.util.Log;
-import com.annimon.stream.Collectors;
 import com.annimon.stream.Stream;
 import com.bumptech.glide.Glide;
 import com.crashlytics.android.Crashlytics;
 import com.crashlytics.android.answers.Answers;
 import com.crashlytics.android.core.CrashlyticsCore;
-import com.google.android.libraries.cast.companionlibrary.cast.CastConfiguration;
-import com.google.android.libraries.cast.companionlibrary.cast.VideoCastManager;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.analytics.FirebaseAnalytics;
-import com.simplecity.amp_library.constants.Config;
-import com.simplecity.amp_library.dagger.component.AppComponent;
-import com.simplecity.amp_library.dagger.component.DaggerAppComponent;
-import com.simplecity.amp_library.dagger.module.AppModule;
+import com.simplecity.amp_library.data.Repository;
+import com.simplecity.amp_library.di.app.DaggerAppComponent;
 import com.simplecity.amp_library.model.Genre;
 import com.simplecity.amp_library.model.Query;
 import com.simplecity.amp_library.model.UserSelectedArtwork;
@@ -37,18 +31,19 @@ import com.simplecity.amp_library.sql.databases.CustomArtworkTable;
 import com.simplecity.amp_library.sql.providers.PlayCountTable;
 import com.simplecity.amp_library.sql.sqlbrite.SqlBriteUtils;
 import com.simplecity.amp_library.utils.AnalyticsManager;
-import com.simplecity.amp_library.utils.DataManager;
 import com.simplecity.amp_library.utils.InputMethodManagerLeaks;
 import com.simplecity.amp_library.utils.LegacyUtils;
 import com.simplecity.amp_library.utils.LogUtils;
 import com.simplecity.amp_library.utils.SettingsManager;
 import com.simplecity.amp_library.utils.StringUtils;
-import com.simplecity.amp_library.utils.sorting.SortManager;
+import com.simplecity.amp_library.utils.extensions.GenreExtKt;
 import com.squareup.leakcanary.LeakCanary;
 import com.squareup.leakcanary.RefWatcher;
+import com.uber.rxdogtag.RxDogTag;
+import dagger.android.AndroidInjector;
+import dagger.android.DaggerApplication;
 import io.fabric.sdk.android.Fabric;
 import io.reactivex.Completable;
-import io.reactivex.CompletableTransformer;
 import io.reactivex.Observable;
 import io.reactivex.schedulers.Schedulers;
 import java.io.File;
@@ -60,6 +55,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.inject.Inject;
 import org.jaudiotagger.audio.AudioFile;
 import org.jaudiotagger.audio.AudioFileIO;
 import org.jaudiotagger.audio.exceptions.CannotReadException;
@@ -70,19 +66,11 @@ import org.jaudiotagger.tag.Tag;
 import org.jaudiotagger.tag.TagException;
 import org.jaudiotagger.tag.TagOptionSingleton;
 
-public class ShuttleApplication extends Application {
+public class ShuttleApplication extends DaggerApplication {
 
     private static final String TAG = "ShuttleApplication";
 
-    private static ShuttleApplication instance;
-
-    public static synchronized ShuttleApplication getInstance() {
-        return instance;
-    }
-
     private boolean isUpgraded;
-
-    public static final double VOLUME_INCREMENT = 0.05;
 
     private RefWatcher refWatcher;
 
@@ -91,11 +79,22 @@ public class ShuttleApplication extends Application {
     private static Logger jaudioTaggerLogger1 = Logger.getLogger("org.jaudiotagger.audio");
     private static Logger jaudioTaggerLogger2 = Logger.getLogger("org.jaudiotagger");
 
-    private AppComponent appComponent;
+    @Inject
+    Repository.SongsRepository songsRepository;
+
+    @Inject
+    AnalyticsManager analyticsManager;
+
+    @Inject
+    SettingsManager settingsManager;
 
     @Override
     public void onCreate() {
         super.onCreate();
+
+        DaggerAppComponent.builder()
+                .create(this)
+                .inject(this);
 
         if (LeakCanary.isInAnalyzerProcess(this)) {
             // This process is dedicated to LeakCanary for heap analysis.
@@ -103,23 +102,12 @@ public class ShuttleApplication extends Application {
             return;
         }
 
-        instance = this;
+        // Todo: Remove for production builds. Useful for tracking down crashes in beta.
+        RxDogTag.install();
 
         if (BuildConfig.DEBUG) {
-            // Traceur.enableLogging();
-
             // enableStrictMode();
         }
-
-        // Todo: Remove after 2.0.5-beta2
-        if (BuildConfig.VERSION_NAME.equals("2.0.5-beta2")) {
-            int genreDetailSongsSortOrder = SortManager.getInstance().getGenreDetailSongsSortOrder();
-            if (genreDetailSongsSortOrder == SortManager.SongSort.DEFAULT) {
-                SortManager.getInstance().setGenreDetailSongsSortOrder(SortManager.SongSort.DETAIL_DEFAULT);
-            }
-        }
-
-        appComponent = initDagger(this);
 
         refWatcher = LeakCanary.install(this);
         // workaround to fix InputMethodManager leak as suggested by LeakCanary lib
@@ -140,13 +128,6 @@ public class ShuttleApplication extends Application {
         FirebaseApp.initializeApp(this);
         FirebaseAnalytics.getInstance(this);
 
-        VideoCastManager.initialize(this,
-                new CastConfiguration.Builder(Config.CHROMECAST_APP_ID)
-                        .enableLockScreen()
-                        .enableNotification()
-                        .build()
-        );
-
         final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         // we cannot call setDefaultValues for multiple fragment based XML preference
         // files with readAgain flag set to false, so always check KEY_HAS_SET_DEFAULT_VALUES
@@ -166,7 +147,7 @@ public class ShuttleApplication extends Application {
 
         TagOptionSingleton.getInstance().setPadNumbers(true);
 
-        SettingsManager.getInstance().incrementLaunchCount();
+        settingsManager.incrementLaunchCount();
 
         Completable.fromAction(() -> {
             Query query = new Query.Builder()
@@ -183,6 +164,8 @@ public class ShuttleApplication extends Application {
                             ),
                     query);
         })
+                .doOnError(throwable -> LogUtils.logException(TAG, "Error updating user selected artwork", throwable))
+                .onErrorComplete()
                 .subscribeOn(Schedulers.io())
                 .subscribe();
 
@@ -208,19 +191,16 @@ public class ShuttleApplication extends Application {
                 .subscribe();
 
         Completable.timer(20, TimeUnit.SECONDS)
-                .andThen(Completable.defer(LegacyUtils::deleteOldResources))
+                .andThen(Completable.defer(() -> LegacyUtils.deleteOldResources(this)))
                 .doOnError(throwable -> LogUtils.logException(TAG, "Failed to delete old resources", throwable))
                 .onErrorComplete()
                 .subscribeOn(Schedulers.io())
                 .subscribe();
     }
 
-    CompletableTransformer doOnDelay(long delay, TimeUnit timeUnit) {
-        return upstream -> Completable.timer(delay, timeUnit)
-                .andThen(Completable.defer(() -> upstream))
-                .doOnError(throwable -> LogUtils.logException(TAG, "Failed to delete old resources", throwable))
-                .onErrorComplete()
-                .subscribeOn(Schedulers.io());
+    @Override
+    protected AndroidInjector<? extends dagger.android.DaggerApplication> applicationInjector() {
+        return DaggerAppComponent.builder().create(this);
     }
 
     public RefWatcher getRefWatcher() {
@@ -234,19 +214,9 @@ public class ShuttleApplication extends Application {
         Glide.get(this).clearMemory();
     }
 
-    public AppComponent getAppComponent() {
-        return appComponent;
-    }
-
-    protected AppComponent initDagger(ShuttleApplication application) {
-        return DaggerAppComponent.builder()
-                .appModule(new AppModule(application))
-                .build();
-    }
-
-    public static String getVersion() {
+    public String getVersion() {
         try {
-            return instance.getPackageManager().getPackageInfo(instance.getPackageName(), 0).versionName;
+            return getPackageManager().getPackageInfo(getPackageName(), 0).versionName;
         } catch (PackageManager.NameNotFoundException | NullPointerException ignored) {
 
         }
@@ -255,23 +225,23 @@ public class ShuttleApplication extends Application {
 
     public void setIsUpgraded(boolean isUpgraded) {
         this.isUpgraded = isUpgraded;
-        AnalyticsManager.setIsUpgraded();
+        analyticsManager.setIsUpgraded(isUpgraded);
     }
 
     public boolean getIsUpgraded() {
         return isUpgraded || BuildConfig.DEBUG;
     }
 
-    public static File getDiskCacheDir(String uniqueName) {
+    public File getDiskCacheDir(String uniqueName) {
         try {
             // Check if media is mounted or storage is built-in, if so, try and use external cache dir
             // otherwise use internal cache dir
             String cachePath = null;
-            File externalCacheDir = getInstance().getExternalCacheDir();
+            File externalCacheDir = getExternalCacheDir();
             if ((Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState()) || !Environment.isExternalStorageRemovable()) && externalCacheDir != null) {
                 cachePath = externalCacheDir.getPath();
-            } else if (getInstance().getCacheDir() != null) {
-                cachePath = getInstance().getCacheDir().getPath();
+            } else if (getCacheDir() != null) {
+                cachePath = getCacheDir().getPath();
             }
             if (cachePath != null) {
                 return new File(cachePath + File.separator + uniqueName);
@@ -343,10 +313,10 @@ public class ShuttleApplication extends Application {
         // If the maximum number of cursors is created (based on memory/processor speed or god knows what else), then the device
         // will start throwing CursorWindow exceptions, and the queries will slow down massively. This ends up making all queries slow.
         // This task isn't time critical, so we can afford to let it just casually do its job.
-        return SqlBriteUtils.createSingleList(ShuttleApplication.getInstance(), Genre::new, Genre.getQuery())
+        return SqlBriteUtils.createSingleList(this, Genre::new, Genre.getQuery())
                 .flatMapObservable(Observable::fromIterable)
                 .concatMap(genre -> Observable.just(genre).delay(50, TimeUnit.MILLISECONDS))
-                .flatMapSingle(genre -> genre.getSongsObservable()
+                .flatMapSingle(genre -> GenreExtKt.getSongsObservable(genre, getApplicationContext())
                         .doOnSuccess(songs -> {
                             if (songs.isEmpty()) {
                                 try {
@@ -366,14 +336,15 @@ public class ShuttleApplication extends Application {
             return Completable.complete();
         }
 
-        return DataManager.getInstance()
-                .getSongsObservable(value -> value.year < 1)
+        return songsRepository.getSongs(value -> value.year < 1)
                 .first(Collections.emptyList())
-                .map(songs -> Stream.of(songs)
-                        .flatMap(song -> {
+                .flatMapObservable(Observable::fromIterable)
+                .concatMap(song -> Observable.just(song).delay(50, TimeUnit.MILLISECONDS))
+                .flatMap(song -> {
                             if (!TextUtils.isEmpty(song.path)) {
                                 File file = new File(song.path);
-                                if (file.exists()) {
+                                // Don't bother checking files > 100mb, uses too much memory.
+                                if (file.exists() && file.length() < 100 * 1024 * 1024) {
                                     try {
                                         AudioFile audioFile = AudioFileIO.read(file);
                                         Tag tag = audioFile.getTag();
@@ -385,22 +356,24 @@ public class ShuttleApplication extends Application {
                                                 ContentValues contentValues = new ContentValues();
                                                 contentValues.put(MediaStore.Audio.Media.YEAR, yearInt);
 
-                                                return Stream.of(ContentProviderOperation
+                                                return Observable.just(ContentProviderOperation
                                                         .newUpdate(ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, song.id))
                                                         .withValues(contentValues)
                                                         .build());
                                             }
                                         }
-                                    } catch (CannotReadException | IOException | TagException | ReadOnlyFileException | InvalidAudioFrameException e) {
-                                        e.printStackTrace();
+                                    } catch (CannotReadException | IOException | TagException | ReadOnlyFileException | InvalidAudioFrameException | OutOfMemoryError e) {
+                                        LogUtils.logException(TAG, "Failed to repair media store year", e);
                                     }
                                 }
                             }
-                            return Stream.empty();
-                        })
-                        .collect(Collectors.toCollection(ArrayList::new))
-                )
-                .doOnSuccess(contentProviderOperations -> getContentResolver().applyBatch(MediaStore.AUTHORITY, contentProviderOperations))
+                            return Observable.empty();
+                        }
+
+                ).toList()
+                .doOnSuccess(contentProviderOperations -> {
+                    getContentResolver().applyBatch(MediaStore.AUTHORITY, new ArrayList<>(contentProviderOperations));
+                })
                 .flatMapCompletable(songs -> Completable.complete());
     }
 

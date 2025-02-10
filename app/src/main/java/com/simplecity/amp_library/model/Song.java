@@ -9,10 +9,6 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import com.simplecity.amp_library.R;
-import com.simplecity.amp_library.ShuttleApplication;
-import com.simplecity.amp_library.http.HttpClient;
-import com.simplecity.amp_library.http.itunes.ItunesResult;
-import com.simplecity.amp_library.http.lastfm.LastFmResult;
 import com.simplecity.amp_library.sql.SqlUtils;
 import com.simplecity.amp_library.sql.providers.PlayCountTable;
 import com.simplecity.amp_library.sql.sqlbrite.SqlBriteUtils;
@@ -24,8 +20,10 @@ import io.reactivex.Single;
 import java.io.File;
 import java.io.InputStream;
 import java.io.Serializable;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.nio.charset.Charset;
 import java.util.List;
-import retrofit2.Call;
 
 public class Song implements
         Serializable,
@@ -55,7 +53,7 @@ public class Song implements
     public int discNumber;
     public boolean isPodcast;
     public String path;
-    public int bookMark;
+    public long bookMark;
 
     public String albumArtistName;
 
@@ -140,17 +138,21 @@ public class Song implements
 
         isPodcast = cursor.getInt(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.IS_PODCAST)) == 1;
 
-        bookMark = cursor.getInt(cursor.getColumnIndex(MediaStore.Audio.Media.BOOKMARK));
+        bookMark = cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media.BOOKMARK));
 
         //Populate the artwork key & sort key properties if null.
         setSortKey();
         setArtworkKey();
     }
 
-    public Single<Genre> getGenre() {
+    public Song() {
+
+    }
+
+    public Single<Genre> getGenre(Context context) {
         Query query = Genre.getQuery();
         query.uri = MediaStore.Audio.Genres.getContentUriForAudioId("external", (int) id);
-        return SqlBriteUtils.createSingle(ShuttleApplication.getInstance(), Genre::new, query, null);
+        return SqlBriteUtils.createSingle(context, Genre::new, query, null);
     }
 
     public int getPlayCount(Context context) {
@@ -216,9 +218,9 @@ public class Song implements
         }
     }
 
-    public String getDurationLabel() {
+    public String getDurationLabel(Context context) {
         if (durationLabel == null) {
-            durationLabel = StringUtils.makeTimeString(ShuttleApplication.getInstance(), duration / 1000);
+            durationLabel = StringUtils.makeTimeString(context, duration / 1000);
         }
         return durationLabel;
     }
@@ -230,21 +232,21 @@ public class Song implements
         return tagInfo;
     }
 
-    public String getBitrateLabel() {
+    public String getBitrateLabel(Context context) {
         if (bitrateLabel == null) {
-            bitrateLabel = getTagInfo().bitrate + ShuttleApplication.getInstance().getString(R.string.song_info_bitrate_suffix);
+            bitrateLabel = getTagInfo().bitrate + context.getString(R.string.song_info_bitrate_suffix);
         }
         return bitrateLabel;
     }
 
-    public String getSampleRateLabel() {
+    public String getSampleRateLabel(Context context) {
         if (sampleRateLabel == null) {
             int sampleRate = getTagInfo().sampleRate;
             if (sampleRate == -1) {
                 sampleRateLabel = "Unknown";
                 return sampleRateLabel;
             }
-            sampleRateLabel = ((float) sampleRate) / 1000 + ShuttleApplication.getInstance().getString(R.string.song_info_sample_rate_suffix);
+            sampleRateLabel = ((float) sampleRate) / 1000 + context.getString(R.string.song_info_sample_rate_suffix);
         }
         return sampleRateLabel;
     }
@@ -353,19 +355,21 @@ public class Song implements
         artworkKey = String.format("%s_%s", albumArtistName, albumName);
     }
 
+    @Nullable
     @Override
-    public Call<? extends LastFmResult> getLastFmArtwork() {
-        return HttpClient.getInstance().lastFmService.getLastFmAlbumResult(artistName, albumName);
+    public String getRemoteArtworkUrl() {
+        try {
+            return "https://artwork.shuttlemusicplayer.app/api/v1/artwork"
+                    + "?artist=" + URLEncoder.encode(albumArtistName, Charset.forName("UTF-8").name())
+                    + "&album=" + URLEncoder.encode(albumName, Charset.forName("UTF-8").name());
+        } catch (UnsupportedEncodingException e) {
+            return null;
+        }
     }
 
     @Override
-    public Call<ItunesResult> getItunesArtwork() {
-        return HttpClient.getInstance().itunesService.getItunesAlbumResult(String.format("%s %s", artistName, albumName));
-    }
-
-    @Override
-    public InputStream getMediaStoreArtwork() {
-        return ArtworkUtils.getMediaStoreArtwork(this);
+    public InputStream getMediaStoreArtwork(Context context) {
+        return ArtworkUtils.getMediaStoreArtwork(context, this);
     }
 
     @Override

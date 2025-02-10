@@ -9,7 +9,7 @@ import com.google.android.apps.dashclock.api.DashClockExtension;
 import com.google.android.apps.dashclock.api.ExtensionData;
 import com.simplecity.amp_library.R;
 import com.simplecity.amp_library.playback.constants.InternalIntents;
-import com.simplecity.amp_library.ui.activities.MainActivity;
+import com.simplecity.amp_library.ui.screens.main.MainActivity;
 
 /**
  * @see <a href="https://code.google.com/p/dashclock/">DashClock</a>
@@ -72,11 +72,13 @@ public class DashClockService extends DashClockExtension {
     private final BroadcastReceiver mStatusListener = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if (!mIsInitialized) {
+
+            final Bundle extras = intent.getExtras();
+
+            if (!mIsInitialized || extras == null) {
                 return;
             }
 
-            final Bundle extras = intent.getExtras();
             mIsPlaying = extras.getBoolean("playing", false);
 
             if (!mIsPlaying) {

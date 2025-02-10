@@ -17,11 +17,17 @@ buildscript {
     }
 }
 
-apply plugin: Dependencies.BuildPlugins.androidApplication
-apply plugin: Dependencies.BuildPlugins.kotlin
+
+plugins {
+    id("com.android.application")
+    id("kotlin-android")
+    id("kotlin-android-extensions")
+    id("kotlin-kapt")
+    id("com.github.triplet.play") version "2.1.0"
+}
+
 apply plugin: Dependencies.BuildPlugins.dexCount
 apply plugin: Dependencies.BuildPlugins.fabric
-apply plugin: Dependencies.BuildPlugins.playPublisher
 
 repositories {
     maven { url 'https://maven.fabric.io/public' }
@@ -50,7 +56,6 @@ android {
     }
 
     compileSdkVersion Dependencies.compileSdk
-    buildToolsVersion Dependencies.buildTools
 
     defaultConfig {
         minSdkVersion Dependencies.minSdk
@@ -59,7 +64,7 @@ android {
         versionName Config.versionName
         versionCode 5000
 
-        resConfigs "en", "zh-rCN", "fr", "de", "ko", "it", "ru", "nl", "tr", "pl", "ro", "hu", "uk", "bg-rBG", "en-rGB", "et-rEE", "vi", "pt-rBR", "es", "en-rNZ", "zh-rTW", "es-rES", "ca", "hr", "en-rAU", "eu-rES", "th", "ja"
+        resConfigs "en", "zh-rCN", "fr", "de", "ko", "it", "ru", "nl", "tr", "pl", "ro", "hu", "hi-rIN", "uk", "bg-rBG", "en-rGB", "et-rEE", "vi", "pt-rBR", "es", "en-rNZ", "zh-rTW", "es-rES", "ca", "hr", "en-rAU", "eu-rES", "th", "ja"
 
         renderscriptTargetApi 23
 
@@ -210,6 +215,7 @@ dependencies {
 
     // Kotlin
     implementation Dependencies.kotlin
+//    implementation Dependencies.ktx
 
     // Google libs
     implementation Dependencies.Google.cardView
@@ -222,7 +228,7 @@ dependencies {
     implementation Dependencies.Google.firebaseCore
     implementation Dependencies.Google.firebaseRemoteConfig
     implementation Dependencies.Google.constraintLayout
-    implementation Dependencies.Google.chromecast
+    implementation Dependencies.Google.chromeCastFramework
 
     // Square libs
     implementation Dependencies.Square.okio
@@ -238,7 +244,6 @@ dependencies {
     implementation project(Dependencies.Projects.navigation)
     implementation project(Dependencies.Projects.recyclerAdapter)
     implementation project(Dependencies.Projects.multiSheetView)
-    implementation project(Dependencies.Projects.ccl)
     implementation project(Dependencies.Projects.glidePalette)
     implementation project(Dependencies.Projects.aesthetic)
 
@@ -251,7 +256,8 @@ dependencies {
     implementation Dependencies.Rx.rxRelay
     implementation Dependencies.Rx.rxBroadcast
     implementation Dependencies.Rx.rxPrefs
-    implementation Dependencies.Rx.traceur
+    implementation Dependencies.Rx.rxKotlin
+    implementation Dependencies.Rx.rxDogTag
 
     // External libs
     implementation Dependencies.nanoHttp
@@ -267,10 +273,15 @@ dependencies {
     implementation Dependencies.billing
 
     implementation Dependencies.butterknife
-    annotationProcessor Dependencies.butterknifeAnnotationProcessor
+    kapt Dependencies.butterknifeAnnotationProcessor
 
     implementation Dependencies.dagger
-    annotationProcessor Dependencies.daggerAnnotationProcessor
+    implementation Dependencies.daggerSupport
+    kapt Dependencies.daggerCompiler
+    kapt Dependencies.daggerProcessor
+
+    compileOnly Dependencies.daggerAssistedInject
+    kapt Dependencies.daggerAssistedInjectProcessor
 
     implementation(Dependencies.crashlytics) {
         transitive = true
@@ -330,8 +341,6 @@ static String getPlayStoreTrack() {
             track = 'beta'
         } else if (branch.contains('release')) {
             track = 'production'
-        } else if (branch.contains('rollout')) {
-            track = 'rollout'
         }
     }
     println "Play store track: $track"
@@ -340,10 +349,7 @@ static String getPlayStoreTrack() {
 
 play {
     track = getPlayStoreTrack()
-    userFraction = 0.1
-    untrackOld = true
-    serviceAccountEmail = 'app-deployment@api-5801704373554614142-812229.iam.gserviceaccount.com'
-    jsonFile = file('../deployment_keys.json')
+    serviceAccountCredentials = file('../deployment_keys.json')
 }
 
 apply plugin: Dependencies.BuildPlugins.playServices

@@ -26,9 +26,7 @@ import com.simplecityapps.recycler_adapter.recyclerview.BaseViewHolder;
 import java.util.Arrays;
 import java.util.List;
 
-public class SongView extends BaseSelectableViewModel<SongView.ViewHolder> implements
-        SectionedView,
-        SelectableViewModel {
+public class SongView extends BaseSelectableViewModel<SongView.ViewHolder> implements SectionedView {
 
     public interface ClickListener {
 
@@ -47,7 +45,11 @@ public class SongView extends BaseSelectableViewModel<SongView.ViewHolder> imple
 
     private RequestManager requestManager;
 
+    private SortManager sortManager;
+
     private PrefixHighlighter prefixHighlighter;
+
+    private SettingsManager settingsManager;
 
     private char[] prefix;
 
@@ -63,14 +65,14 @@ public class SongView extends BaseSelectableViewModel<SongView.ViewHolder> imple
 
     private boolean showAlbumName = true;
 
-    private boolean isCurrentTrack;
-
     @Nullable
     private ClickListener listener;
 
-    public SongView(Song song, RequestManager requestManager) {
+    public SongView(Song song, RequestManager requestManager, SortManager sortManager, SettingsManager settingsManager) {
         this.song = song;
         this.requestManager = requestManager;
+        this.sortManager = sortManager;
+        this.settingsManager = settingsManager;
     }
 
     public void setClickListener(@Nullable ClickListener listener) {
@@ -108,14 +110,6 @@ public class SongView extends BaseSelectableViewModel<SongView.ViewHolder> imple
 
     public void setShowTrackNumber(boolean showTrackNumber) {
         this.showTrackNumber = showTrackNumber;
-    }
-
-    public void setCurrentTrack(boolean isCurrentTrack) {
-        this.isCurrentTrack = isCurrentTrack;
-    }
-
-    public boolean isCurrentTrack() {
-        return isCurrentTrack;
     }
 
     void onItemClick(int position) {
@@ -178,18 +172,14 @@ public class SongView extends BaseSelectableViewModel<SongView.ViewHolder> imple
             holder.lineTwo.setVisibility(View.GONE);
         }
 
-        holder.lineThree.setText(song.getDurationLabel());
-
-        if (holder.dragHandle != null) {
-            holder.dragHandle.setActivated(isCurrentTrack);
-        }
+        holder.lineThree.setText(song.getDurationLabel(holder.itemView.getContext()));
 
         if (holder.artwork != null) {
-            if (showAlbumArt && SettingsManager.getInstance().showArtworkInQueue()) {
+            if (showAlbumArt && settingsManager.showArtworkInQueue()) {
                 holder.artwork.setVisibility(View.VISIBLE);
                 requestManager.load(song)
                         .diskCacheStrategy(DiskCacheStrategy.ALL)
-                        .placeholder(PlaceholderProvider.getInstance().getPlaceHolderDrawable(song.albumName, false))
+                        .placeholder(PlaceholderProvider.getInstance(holder.itemView.getContext()).getPlaceHolderDrawable(song.albumName, false, settingsManager))
                         .into(holder.artwork);
             } else {
                 holder.artwork.setVisibility(View.GONE);
@@ -223,10 +213,6 @@ public class SongView extends BaseSelectableViewModel<SongView.ViewHolder> imple
             prefixHighlighter.setText(holder.lineOne, prefix);
             prefixHighlighter.setText(holder.lineTwo, prefix);
         }
-
-        if (holder.dragHandle != null) {
-            holder.dragHandle.setActivated(isCurrentTrack);
-        }
     }
 
     @Override
@@ -236,7 +222,7 @@ public class SongView extends BaseSelectableViewModel<SongView.ViewHolder> imple
 
     @Override
     public String getSectionName() {
-        int sortOrder = SortManager.getInstance().getSongsSortOrder();
+        int sortOrder = sortManager.getSongsSortOrder();
 
         if (sortOrder != SortManager.SongSort.DATE
                 && sortOrder != SortManager.SongSort.DURATION
@@ -302,7 +288,6 @@ public class SongView extends BaseSelectableViewModel<SongView.ViewHolder> imple
         if (showTrackNumber != songView.showTrackNumber) return false;
         if (showArtistName != songView.showArtistName) return false;
         if (showAlbumName != songView.showAlbumName) return false;
-        if (isCurrentTrack != songView.isCurrentTrack) return false;
         return song != null ? song.equals(songView.song) : songView.song == null;
     }
 
@@ -315,7 +300,6 @@ public class SongView extends BaseSelectableViewModel<SongView.ViewHolder> imple
         result = 31 * result + (showTrackNumber ? 1 : 0);
         result = 31 * result + (showArtistName ? 1 : 0);
         result = 31 * result + (showAlbumName ? 1 : 0);
-        result = 31 * result + (isCurrentTrack ? 1 : 0);
         return result;
     }
 

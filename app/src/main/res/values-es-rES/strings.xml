@@ -32,8 +32,7 @@
     <string name="repeat_all_notif">Repetir todas las canciones.</string>
     <!-- Individual song context menu item -->
     <string name="ringtone_menu">Establecer como tono de llamada</string>
-    <!-- Toast after setting a song as phone ringtone -->
-    <string name="ringtone_set"><xliff:g example="Alarm Bell" id="name">%s</xliff:g>\"  seleccionado como tono de llamada.</string>
+    <!-- Toast after setting a song as phone ringtone.-->
     <!-- Toast if setting ringtone fails -->
     <string name="ringtone_set_failed">No se ha podido establecer tono de llamada</string>
     <!-- Toasts after adding song(s) to playlists -->
@@ -104,7 +103,7 @@
     <string name="delete_album_artist_desc_multiple">Todas las canciones de los próximos artistas de álbum:<xliff:g id="album-artist">%s</xliff:g>serán permanentemente eliminadas</string>
     <!-- Delete confirmation dialog when deleting an entire album -->
     <string name="delete_album_desc">Todas las canciones del álbum <xliff:g id="album">%s</xliff:g> serán eliminadas permanentemente.</string>
-    <!-- Delete confirmation dialog message when deleting albums -->
+    <!-- Delete confirmation dialog when deleting songs from unknown album/artist or songs whose name is unknown. -->
     <string name="get_pro_button_play_store">Play Store</string>
     <string name="get_pro_button_amazon">Amazon</string>
     <string name="delete_album_desc_multiple">Todas las canciones de los siguientes albumes:<xliff:g id="album">%s</xliff:g>serán eliminadas permanentemente.</string>
@@ -182,7 +181,7 @@
     <string name="fav_title">Favoritos</string>
     <!-- -->
     <string name="library_title">Biblioteca</string>
-    <!-- -->
+    <!-- Lock Queue -->
     <!-- Library screen, menu item -->
     <string name="search_title">Buscar</string>
     <string name="search_filter">Filtrar</string>
@@ -278,10 +277,6 @@
     <string name="pref_title_ignore_folder_art">Ignorar carátulas dentro de las carpetas</string>
     <!-- Settings summary for the embedded artwork checkbox-->
     <string name="pref_summary_ignore_folder_art">No buscar carátulas guardadas en sus carpetas de música</string>
-    <!-- Settings title for ignore folder artwork checkbox (whether the app can use local artwork for the album art -->
-    <string name="pref_title_prefer_lastfm">Preferir carátulas de Last.fm</string>
-    <!-- Settings summary for the embedded artwork checkbox-->
-    <string name="pref_summary_prefer_lastfm">Marque esta casilla si prefiere que Shuttle busque sus carátulas en Last.fm en lugar de hacerlo en los servidores de iTunes. (Sólo las ilustraciones)</string>
     <!-- Settings title for Artwork settings heading -->
     <string name="pref_string_title_artwork">Carátula</string>
     <!-- Settings title for the download artwork button -->
@@ -373,8 +368,6 @@ Si no está seleccionado, se usará el icono de Shuttle en su lugar</string>
     <string name="pref_title_version">Versión</string>
     <string name="pref_title_faq">FAQ</string>
     <string name="pref_summary_faq">¿Tienes una pregunta? ¿Necesitas ayuda? Haz click aquí para ver el FAQ en www.shuttlemusicplayer.com</string>
-    <string name="pref_title_gplus">Conseguir ayuda</string>
-    <string name="pref_summary_gplus">Esta es una comunidad muy activa de usuarios de Shuttle en Google+. Si usted tiene preguntas o necesita ayuda, este es el mejor lugar al que acudir.</string>
     <string name="pref_title_rate">Da las gracias</string>
     <string name="pref_summary_rate">Si te gusta Shuttle, por favor considera dejar una crítica.</string>
     <string name="pref_title_headset_beep">Pitar al pasar</string>
@@ -683,8 +676,6 @@ carpetas</item>
     <string name="artwork_edit">Seleccionar carátula</string>
     <string name="artwork_type_media_store">Almacenamiento de Medios</string>
     <string name="artwork_type_tag">Etiqueta</string>
-    <string name="artwork_type_lastfm">Last.FM</string>
-    <string name="artwork_type_itunes">iTunes</string>
     <string name="artwork_type_custom">Personalizado</string>
     <string name="artwork_gallery">Galeria</string>
     <!-- Launcher Shortcuts -->

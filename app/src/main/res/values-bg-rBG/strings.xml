@@ -32,8 +32,7 @@
     <string name="repeat_all_notif">Повторение на всички песни.</string>
     <!-- Individual song context menu item -->
     <string name="ringtone_menu">Използване като мелодия на телефона</string>
-    <!-- Toast after setting a song as phone ringtone -->
-    <string name="ringtone_set"><xliff:g example="Alarm Bell" id="name">%s</xliff:g> зададено като тон за звънене.</string>
+    <!-- Toast after setting a song as phone ringtone.-->
     <!-- Toast if setting ringtone fails -->
     <string name="ringtone_set_failed">Тонът на звънене не беше настроен</string>
     <!-- Toasts after adding song(s) to playlists -->
@@ -110,7 +109,7 @@
     <string name="delete_album_artist_desc_multiple">Всички песни от следните изпълнители на албуми: <xliff:g id="album-artist">%s</xliff:g> ще бъдат изтрити.</string>
     <!-- Delete confirmation dialog when deleting an entire album -->
     <string name="delete_album_desc">Целият албум \"<xliff:g id="album">%s</xliff:g>\" ще бъде окончателно премахнат от USB устройството.</string>
-    <!-- Delete confirmation dialog message when deleting albums -->
+    <!-- Delete confirmation dialog when deleting songs from unknown album/artist or songs whose name is unknown. -->
     <string name="get_pro_button_play_store">Play Store</string>
     <string name="get_pro_button_amazon">Amazon</string>
     <string name="delete_album_desc_multiple">Следните албуми ще бъдат изтрити за постоянно: <xliff:g id="album">%s</xliff:g>.</string>
@@ -184,7 +183,7 @@
     <string name="fav_title">Любими</string>
     <!-- -->
     <string name="library_title">Библиотека</string>
-    <!-- -->
+    <!-- Lock Queue -->
     <!-- Library screen, menu item -->
     <string name="search_title">Търсене</string>
     <!-- Playlist context menu item to clear the selected playlist. -->
@@ -273,10 +272,6 @@
     <string name="pref_title_ignore_folder_art">Игнорирай корици от папки</string>
     <!-- Settings summary for the embedded artwork checkbox-->
     <string name="pref_summary_ignore_folder_art">Не търси корици съхранени в папките с музика</string>
-    <!-- Settings title for ignore folder artwork checkbox (whether the app can use local artwork for the album art -->
-    <string name="pref_title_prefer_lastfm">Предпочитане на корици от Last.fm</string>
-    <!-- Settings summary for the embedded artwork checkbox-->
-    <string name="pref_summary_prefer_lastfm">Маркирай ако предпочиташ Shuttle да търси корици първо в Last.fm преди да търси в Itunes сървъри. (Само корици на албуми)</string>
     <!-- Settings title for Artwork settings heading -->
     <string name="pref_string_title_artwork">Обложка</string>
     <!-- Settings title for the download artwork button -->
@@ -365,8 +360,6 @@
     <string name="pref_title_version">Версия</string>
     <string name="pref_title_faq">ЧЗВ</string>
     <string name="pref_summary_faq">Имате въпрос или нужда от помощ? Докоснете тук, за да отворите списъка с въпроси и отговори на www.shuttlemusicplayer.com</string>
-    <string name="pref_title_gplus">Помощ</string>
-    <string name="pref_summary_gplus">В Google+ е налице е много активна общност от потребители на Shuttle. Ако имате въпроси или нужда от помощ, най-добре да посетите общността.</string>
     <string name="pref_title_rate">Кажете \"Благодаря\"</string>
     <string name="pref_summary_rate">Ако харесвате Shuttle, обмислете написването на ревю.</string>
     <!-- Settings title for ignore playlist duplicates -->
@@ -657,8 +650,6 @@
     <string name="artwork_edit">Промени обложката</string>
     <string name="artwork_type_media_store">Системно</string>
     <string name="artwork_type_tag">Таг</string>
-    <string name="artwork_type_lastfm">Last.FM</string>
-    <string name="artwork_type_itunes">iTunes</string>
     <string name="artwork_type_custom">По избор</string>
     <string name="artwork_gallery">Галерия</string>
     <!-- Launcher Shortcuts -->

@@ -32,8 +32,7 @@
     <string name="repeat_all_notif">เล่นซ้ำทุกเพลง</string>
     <!-- Individual song context menu item -->
     <string name="ringtone_menu">ตั้งเป็นเสียงเรียกเข้า</string>
-    <!-- Toast after setting a song as phone ringtone -->
-    <string name="ringtone_set">\"<xliff:g example="Alarm Bell" id="name">%s</xliff:g>\" ตั้งเป็นเสียงเรียกเข้า</string>
+    <!-- Toast after setting a song as phone ringtone.-->
     <!-- Toast if setting ringtone fails -->
     <string name="ringtone_set_failed">ไม่สามารถตั้งเป็นเสียงเรียกเข้าได้</string>
     <!-- Toasts after adding song(s) to playlists -->
@@ -114,7 +113,7 @@
     <string name="delete_album_artist_desc_multiple">ทุกเพลงของศิลปินอัลบั้มต่อไปนี้:<xliff:g id="album-artist">%s</xliff:g>จะถูกลบอย่างถาวร</string>
     <!-- Delete confirmation dialog when deleting an entire album -->
     <string name="delete_album_desc">เพลงทั้งหมดจากอัลบั้ม <xliff:g id="album">%s</xliff:g> จะถูกลบอย่างถาวร</string>
-    <!-- Delete confirmation dialog message when deleting albums -->
+    <!-- Delete confirmation dialog when deleting songs from unknown album/artist or songs whose name is unknown. -->
     <string name="get_pro_button_play_store">Play Store</string>
     <string name="get_pro_button_amazon">Amazon</string>
     <string name="delete_album_desc_multiple">เพลงทั้งหมดจากอัลบั้มต่อไปนี้:<xliff:g id="album">%s</xliff:g>จะถูกลบอย่างถาวร</string>
@@ -192,7 +191,7 @@
     <string name="fav_title">รายการโปรด</string>
     <!-- -->
     <string name="library_title">ห้องสมุด</string>
-    <!-- -->
+    <!-- Lock Queue -->
     <!-- Library screen, menu item -->
     <string name="search_title">ค้นหา</string>
     <string name="search_filter">ตัวกรอง</string>
@@ -287,10 +286,6 @@
     <string name="pref_title_ignore_folder_art">ละเว้นงานศิลปะของโฟลเดอร์</string>
     <!-- Settings summary for the embedded artwork checkbox-->
     <string name="pref_summary_ignore_folder_art">อย่าค้นหางานศิลปะที่จัดเก็บไว้ในไดเรกทอรีเพลงของคุณ</string>
-    <!-- Settings title for ignore folder artwork checkbox (whether the app can use local artwork for the album art -->
-    <string name="pref_title_prefer_lastfm">ชอบงานศิลปะ Last.fm</string>
-    <!-- Settings summary for the embedded artwork checkbox-->
-    <string name="pref_summary_prefer_lastfm">เลือกช่องนี้หากคุณต้องการให้ Shuttle ค้นหางานศิลปะที่ Last.fm ก่อนที่จะค้นหาเซิร์ฟเวอร์ iTunes (เฉพาะงานศิลปะของอัลบั้มเท่านั้น)</string>
     <!-- Settings title for Artwork settings heading -->
     <string name="pref_string_title_artwork">งานศิลปะ</string>
     <!-- Settings title for the download artwork button -->
@@ -376,8 +371,6 @@
     <string name="pref_title_version">รุ่น</string>
     <string name="pref_title_faq">คำถามที่พบบ่อย</string>
     <string name="pref_summary_faq">มีคำถาม? ต้องการความช่วยเหลือ? คลิกที่นี่เพื่อดูคำถามที่พบบ่อย @ www.shuttlemusicplayer.com</string>
-    <string name="pref_title_gplus">ขอความช่วยเหลือ</string>
-    <string name="pref_summary_gplus">ชุมชนผู้ใช้ Shuttle ในชุมชน Google+ มีการใช้งานเป็นอย่างมาก หากคุณมีคำถามหรือต้องการความช่วยเหลือนี่เป็นสถานที่ที่ดีที่สุด</string>
     <string name="pref_title_rate">พูดขอบคุณ</string>
     <string name="pref_summary_rate">ถ้าคุณชอบ Shuttle โปรดพิจารณาออกความคิดเห็น</string>
     <string name="pref_title_headset_beep">เสียงเตือนเมื่อข้าม</string>
@@ -683,8 +676,6 @@
     <string name="artwork_edit">เลือกงานศิลปะ</string>
     <string name="artwork_type_media_store">Media Store</string>
     <string name="artwork_type_tag">แท็ก</string>
-    <string name="artwork_type_lastfm">Last.FM</string>
-    <string name="artwork_type_itunes">iTunes</string>
     <string name="artwork_type_custom">กำหมดเอง</string>
     <string name="artwork_gallery">แกลลอรี่</string>
     <!-- Launcher Shortcuts -->

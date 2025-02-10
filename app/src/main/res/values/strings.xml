@@ -34,8 +34,8 @@
     <string name="repeat_all_notif">Repeat all songs</string>
     <!-- Individual song context menu item -->
     <string name="ringtone_menu">Set as ringtone</string>
-    <!-- Toast after setting a song as phone ringtone -->
-    <string name="ringtone_set">\"<xliff:g example="Alarm Bell" id="name">%s</xliff:g>\" set as phone ringtone.</string>
+    <!-- Toast after setting a song as phone ringtone.-->
+    <string name="ringtone_set_new">Ringtone set.</string>
     <!-- Toast if setting ringtone fails -->
     <string name="ringtone_set_failed">Couldn\'t set ringtone</string>
     <!-- Toasts after adding song(s) to playlists -->
@@ -124,13 +124,17 @@
     <string name="create_playlist_create_text_prompt">Playlist name</string>
     <!-- Text for the "cancel" button in the "delete" and "create playlist" confirmation dialogs -->
     <string name="cancel">Cancel</string>
+
     <!-- Delete confirmation dialog when deleting an entire artist -->
     <string name="delete_album_artist_desc">All songs by <xliff:g id="album-artist">%s</xliff:g> will be permanently deleted.</string>
     <!-- Delete confirmation dialog message when deleting artists -->
     <string name="delete_album_artist_desc_multiple">All songs by the following album artists:<xliff:g id="album-artist">%s</xliff:g>will be permanently deleted.</string>
     <!-- Delete confirmation dialog when deleting an entire album -->
     <string name="delete_album_desc">All songs from the album <xliff:g id="album">%s</xliff:g> will be permanently deleted.</string>
-    <!-- Delete confirmation dialog message when deleting albums -->
+    <!-- Delete confirmation dialog when deleting songs from unknown album/artist or songs whose name is unknown. -->
+    <string name="delete_songs_unknown">Selected songs will be permanently deleted.</string>
+
+
     <string name="get_pro_button_play_store">Play Store</string>
     <string name="get_pro_button_amazon">Amazon</string>
 
@@ -216,7 +220,10 @@
     <string name="fav_title">Favorites</string>
     <!-- -->
     <string name="library_title">Library</string>
-    <!-- -->
+    <!-- Lock Queue -->
+    <string name="menu_queue_swipe_enable">Enable Swipe</string>
+    <string name="menu_queue_swipe_disable">Disable Swipe</string>
+
 
     <!-- Library screen, menu item -->
     <string name="search_title">Search</string>
@@ -320,10 +327,6 @@
     <string name="pref_title_ignore_folder_art">Ignore folder artwork</string>
     <!-- Settings summary for the embedded artwork checkbox-->
     <string name="pref_summary_ignore_folder_art">Don\'t search for artwork stored in your music directories</string>
-    <!-- Settings title for ignore folder artwork checkbox (whether the app can use local artwork for the album art -->
-    <string name="pref_title_prefer_lastfm">Prefer Last.fm artwork</string>
-    <!-- Settings summary for the embedded artwork checkbox-->
-    <string name="pref_summary_prefer_lastfm">Check this box if you\'d prefer Shuttle to look for artwork at Last.fm first, before searching iTunes servers. (Album artwork only)</string>
     <!-- Settings title for Artwork settings heading -->
     <string name="pref_string_title_artwork">Artwork</string>
     <!-- Settings title for the download artwork button -->
@@ -417,8 +420,8 @@
     <string name="pref_title_version">Version</string>
     <string name="pref_title_faq">FAQ</string>
     <string name="pref_summary_faq">Have a question? Need help? Click here to view the FAQ @ www.shuttlemusicplayer.com</string>
-    <string name="pref_title_gplus">Get Help</string>
-    <string name="pref_summary_gplus">There is a very active community of Shuttle users on Google+. If you have questions or need help, this is the best place to go.</string>
+    <string name="pref_title_community">Get Help</string>
+    <string name="pref_summary_community">There is a very active community of Shuttle users on Discord. If you have questions or need help, this is the best place to go.</string>
     <string name="pref_title_rate">Say Thanks</string>
     <string name="pref_summary_rate">If you like Shuttle, please consider leaving a review.</string>
 
@@ -766,8 +769,7 @@
     <string name="artwork_edit">Choose artwork</string>
     <string name="artwork_type_media_store">Media Store</string>
     <string name="artwork_type_tag">Tag</string>
-    <string name="artwork_type_lastfm">Last.FM</string>
-    <string name="artwork_type_itunes">iTunes</string>
+    <string name="artwork_type_internet">Internet</string>
     <string name="artwork_type_custom">Custom</string>
     <string name="artwork_gallery">Gallery</string>
 
@@ -831,5 +833,9 @@
     <string name="saf_access_required_title">Storage Access Required</string>
     <string name="saf_access_required_message">Shuttle requires permission to access these files. Please pick the directory containing your music.</string>
     <string name="saf_show_files_button">Show files</string>
+
+
+
+    <string name="notification_text_shuttle_running">Shuttle service running…</string>
 
 </resources>

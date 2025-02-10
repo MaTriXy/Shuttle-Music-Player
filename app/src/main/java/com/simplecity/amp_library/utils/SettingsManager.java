@@ -1,24 +1,25 @@
 package com.simplecity.amp_library.utils;
 
-import android.content.res.Resources;
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.support.annotation.Nullable;
 import com.simplecity.amp_library.BuildConfig;
 import com.simplecity.amp_library.R;
 import com.simplecity.amp_library.model.CategoryItem;
 import com.simplecity.amp_library.ui.adapters.ViewType;
 import com.simplecity.amp_library.utils.sorting.SortManager;
+import javax.inject.Inject;
+import javax.inject.Singleton;
+import org.jetbrains.annotations.NotNull;
 
+@Singleton
 public class SettingsManager extends BaseSettingsManager {
 
     private static final String TAG = "SettingsManager";
 
-    private static SettingsManager instance;
-
-    public static SettingsManager getInstance() {
-        if (instance == null) {
-            instance = new SettingsManager();
-        }
-        return instance;
+    @Inject
+    public SettingsManager(@NotNull SharedPreferences sharedPreferences) {
+        super(sharedPreferences);
     }
 
     // Support
@@ -62,12 +63,6 @@ public class SettingsManager extends BaseSettingsManager {
     public boolean hasSeenRateSnackbar = false;
 
     // Whether to display artwork in the songs list
-    //public static String KEY_SHOW_
-
-    private SettingsManager() {
-
-    }
-
     public static final String KEY_SHOW_LOCKSCREEN_ARTWORK = "pref_show_lockscreen_artwork";
 
     public boolean showLockscreenArtwork() {
@@ -91,8 +86,8 @@ public class SettingsManager extends BaseSettingsManager {
     }
 
     @ViewType
-    public int getAlbumDisplayType() {
-        return getInt(KEY_ALBUM_DISPLAY_TYPE, ShuttleUtils.isTablet() ? ViewType.ALBUM_PALETTE : ViewType.ALBUM_LIST);
+    public int getAlbumDisplayType(Context context) {
+        return getInt(KEY_ALBUM_DISPLAY_TYPE, ShuttleUtils.isTablet(context) ? ViewType.ALBUM_PALETTE : ViewType.ALBUM_LIST);
     }
 
     private static final String KEY_ARTIST_DISPLAY_TYPE = "artist_display_type_new";
@@ -111,29 +106,30 @@ public class SettingsManager extends BaseSettingsManager {
     private static final String KEY_ARTIST_COLUMN_COUNT_TABLET = "artist_column_count_tablet";
     private static final String KEY_ARTIST_COLUMN_COUNT_TABLET_LAND = "artist_column_count_tablet_land";
 
-    private String getArtistColumnCountKey() {
+    private String getArtistColumnCountKey(Context context) {
         String key = KEY_ARTIST_COLUMN_COUNT;
 
-        if (ShuttleUtils.isLandscape()) {
-            key = ShuttleUtils.isTablet() ? KEY_ARTIST_COLUMN_COUNT_TABLET_LAND : KEY_ARTIST_COLUMN_COUNT_LAND;
+        if (ShuttleUtils.isLandscape(context)) {
+            key = ShuttleUtils.isTablet(context) ? KEY_ARTIST_COLUMN_COUNT_TABLET_LAND : KEY_ARTIST_COLUMN_COUNT_LAND;
         } else {
-            if (ShuttleUtils.isTablet()) key = KEY_ARTIST_COLUMN_COUNT_TABLET;
+            if (ShuttleUtils.isTablet(context)) key = KEY_ARTIST_COLUMN_COUNT_TABLET;
         }
 
         return key;
     }
 
-    public void setArtistColumnCount(int count) {
-        setInt(getArtistColumnCountKey(), count);
+    public void setArtistColumnCount(Context context, int count) {
+        setInt(getArtistColumnCountKey(context), count);
     }
 
-    public int getArtistColumnCount(Resources res) {
+    public int getArtistColumnCount(Context context) {
         int artistDisplayType = getArtistDisplayType();
-        int defaultSpanCount = artistDisplayType == ViewType.ARTIST_LIST ? res.getInteger(R.integer.list_num_columns) : res.getInteger(R.integer.grid_num_columns);
+        int defaultSpanCount =
+                artistDisplayType == ViewType.ARTIST_LIST ? context.getResources().getInteger(R.integer.list_num_columns) : context.getResources().getInteger(R.integer.grid_num_columns);
         if (artistDisplayType == ViewType.ARTIST_LIST && defaultSpanCount == 1) {
             return 1;
         }
-        return getInt(getArtistColumnCountKey(), defaultSpanCount);
+        return getInt(getArtistColumnCountKey(context), defaultSpanCount);
     }
 
     private static final String KEY_ALBUM_COLUMN_COUNT = "album_column_count";
@@ -141,29 +137,29 @@ public class SettingsManager extends BaseSettingsManager {
     private static final String KEY_ALBUM_COLUMN_COUNT_TABLET = "album_column_count_tablet";
     private static final String KEY_ALBUM_COLUMN_COUNT_TABLET_LAND = "album_column_count_tablet_land";
 
-    private String getAlbumColumnCountKey() {
+    private String getAlbumColumnCountKey(Context context) {
         String key = KEY_ALBUM_COLUMN_COUNT;
 
-        if (ShuttleUtils.isLandscape()) {
-            key = ShuttleUtils.isTablet() ? KEY_ALBUM_COLUMN_COUNT_TABLET_LAND : KEY_ALBUM_COLUMN_COUNT_LAND;
+        if (ShuttleUtils.isLandscape(context)) {
+            key = ShuttleUtils.isTablet(context) ? KEY_ALBUM_COLUMN_COUNT_TABLET_LAND : KEY_ALBUM_COLUMN_COUNT_LAND;
         } else {
-            if (ShuttleUtils.isTablet()) key = KEY_ALBUM_COLUMN_COUNT_TABLET;
+            if (ShuttleUtils.isTablet(context)) key = KEY_ALBUM_COLUMN_COUNT_TABLET;
         }
 
         return key;
     }
 
-    public void setAlbumColumnCount(int count) {
-        setInt(getAlbumColumnCountKey(), count);
+    public void setAlbumColumnCount(Context context, int count) {
+        setInt(getAlbumColumnCountKey(context), count);
     }
 
-    public int getAlbumColumnCount(Resources res) {
-        int albumDisplayType = getAlbumDisplayType();
-        int defaultSpanCount = albumDisplayType == ViewType.ALBUM_LIST ? res.getInteger(R.integer.list_num_columns) : res.getInteger(R.integer.grid_num_columns);
+    public int getAlbumColumnCount(Context context) {
+        int albumDisplayType = getAlbumDisplayType(context);
+        int defaultSpanCount = albumDisplayType == ViewType.ALBUM_LIST ? context.getResources().getInteger(R.integer.list_num_columns) : context.getResources().getInteger(R.integer.grid_num_columns);
         if (albumDisplayType == ViewType.ALBUM_LIST && defaultSpanCount == 1) {
             return 1;
         }
-        return getInt(getAlbumColumnCountKey(), defaultSpanCount);
+        return getInt(getAlbumColumnCountKey(context), defaultSpanCount);
     }
 
     public boolean getEqualizerEnabled() {
@@ -314,10 +310,10 @@ public class SettingsManager extends BaseSettingsManager {
 
     // Artwork
 
-    public static final String KEY_PREFER_LAST_FM = "pref_prefer_lastfm";
     private static final String KEY_DOWNLOAD_AUTOMATICALLY = "pref_download_artwork_auto";
     private static final String KEY_USE_GMAIL_PLACEHOLDERS = "pref_placeholders";
     private static final String KEY_QUEUE_ARTWORK = "pref_artwork_queue";
+    private static final String KEY_QUEUE_SWIPE_LOCKED = "pref_lock_queue";
     private static final String KEY_SONG_LIST_ARTWORK = "pref_artwork_song_list";
     private static final String KEY_CROP_ARTWORK = "pref_crop_artwork";
     public static final String KEY_IGNORE_MEDIASTORE_ART = "pref_ignore_mediastore_artwork";
@@ -327,10 +323,6 @@ public class SettingsManager extends BaseSettingsManager {
 
     public boolean canDownloadArtworkAutomatically() {
         return getBool(KEY_DOWNLOAD_AUTOMATICALLY, false);
-    }
-
-    public boolean preferLastFM() {
-        return getBool(KEY_PREFER_LAST_FM, true);
     }
 
     public boolean preferEmbeddedArtwork() {
@@ -343,6 +335,14 @@ public class SettingsManager extends BaseSettingsManager {
 
     public boolean showArtworkInQueue() {
         return getBool(KEY_QUEUE_ARTWORK, true);
+    }
+
+    public boolean queueSwipeLocked() {
+        return getBool(KEY_QUEUE_SWIPE_LOCKED, false);
+    }
+
+    public void setQueueSwipeLocked(boolean locked) {
+        setBool(KEY_QUEUE_SWIPE_LOCKED, locked);
     }
 
     public boolean cropArtwork() {
@@ -467,15 +467,13 @@ public class SettingsManager extends BaseSettingsManager {
         setInt(KEY_NUM_WEEKS, weeks);
     }
 
-
-
     // Song List
 
     public boolean showArtworkInSongList() {
         return getBool(KEY_SONG_LIST_ARTWORK, true);
     }
 
-    public void setShowArtworkInSongList(boolean showArtworkInSongList){
+    public void setShowArtworkInSongList(boolean showArtworkInSongList) {
         setBool(KEY_SONG_LIST_ARTWORK, showArtworkInSongList);
     }
 }

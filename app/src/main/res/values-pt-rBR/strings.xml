@@ -2,7 +2,7 @@
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <!-- ## Toast Messages ## -->
     <!-- Shown when a user attempts to edit tags, but they don't have a 'DocumentProvider' available to pick the directory of their music (and thus give permission to Shuttle)-->
-    <string name="R.string.toast_no_document_provider">Sem gerenciador de arquivos disponível para gerenciar permissão de acesso</string>
+    <string name="R.string.toast_no_document_provider">Sem gerenciador de arquivos disponível para gerenciar permissões de acesso</string>
     <!-- Displayed when an M3U playlist is being saved, but it already exists -->
     <!-- Displayed when an M3U playlist save fails -->
     <string name="playlist_save_failed">A playlist não pôde ser salva</string>
@@ -32,8 +32,7 @@
     <string name="repeat_all_notif">Repetindo todas as músicas</string>
     <!-- Individual song context menu item -->
     <string name="ringtone_menu">Usar como toque</string>
-    <!-- Toast after setting a song as phone ringtone -->
-    <string name="ringtone_set">\"<xliff:g example="Alarm Bell" id="name">%s</xliff:g>\" selecionada como toque de chamadas.</string>
+    <!-- Toast after setting a song as phone ringtone.-->
     <!-- Toast if setting ringtone fails -->
     <string name="ringtone_set_failed">Não foi possível usar como toque</string>
     <!-- Toasts after adding song(s) to playlists -->
@@ -91,15 +90,15 @@ músicas adicionadas à fila.</item>
 \nE também ajuda a promover o desenvolvimento futuro do aplicativo.</string>
     <!-- -->
     <string name="upgraded_title">Obrigado</string>
-    <string name="upgraded_message">Você atualizou para o Shuttle+ com sucesso. Eu agradeço o suporte.
+    <string name="upgraded_message">Você atualizou para o Shuttle+ com sucesso. Obrigado pelo apoio.
 \n\nPor favor, reinicie o aplicativo para garantir que todos os recursos estão habilitados</string>
     <string name="upgrade_dialog_message">• Suporte ao ChromeCast
 \n• Temas extras
 \n• Edição de tags
 \n• Navegação por pastas
 \n• Ajuda e suporte ao desenvolvimento do app ❤️</string>
-    <string name="upgrade_required_folders">Atualizar para Shuttle+</string>
-    <string name="btn_upgrade">Atualizar</string>
+    <string name="upgrade_required_folders">Upgrade para Shuttle+</string>
+    <string name="btn_upgrade">Upgrade</string>
     <!-- -->
     <string name="get_pro_button_no">Não, obrigado</string>
     <!-- Dialog 'close' button -->
@@ -116,7 +115,8 @@ músicas adicionadas à fila.</item>
     <string name="delete_album_artist_desc_multiple">Todas as músicas dos seguintes artistas:<xliff:g id="album-artist">%s</xliff:g>serão permanentemente apagadas.</string>
     <!-- Delete confirmation dialog when deleting an entire album -->
     <string name="delete_album_desc">Todas as músicas do álbum <xliff:g id="album">%s</xliff:g> serão permanentemente apagadas.</string>
-    <!-- Delete confirmation dialog message when deleting albums -->
+    <!-- Delete confirmation dialog when deleting songs from unknown album/artist or songs whose name is unknown. -->
+    <string name="delete_songs_unknown">As músicas selecionadas serão deletadas permanentemente.</string>
     <string name="get_pro_button_play_store">Play Store</string>
     <string name="get_pro_button_amazon">Amazon</string>
     <string name="delete_album_desc_multiple">Os álbuns a seguir:<xliff:g id="album">%s</xliff:g>Serão permanentemente apagados.</string>
@@ -152,6 +152,9 @@ músicas adicionadas à fila.</item>
     <string name="dialog_button_playlist_duplicate_skip">Pular</string>
     <!-- Checkbox text 'always add duplicates' -->
     <string name="dialog_checkbox_playlist_duplicate_always_add">Sempre adicionar duplicatas</string>
+    <string name="dialog_title_playlist_delete">Apagar playlist?</string>
+    <string name="dialog_message_playlist_delete"><xliff:g id="playlist">%s</xliff:g> será permanentemente apagada.</string>
+    <string name="dialog_button_delete">Apagar</string>
     <!-- ## Widgets ## -->
     <!-- Checkbox text to invert colors of buttons & text -->
     <string name="widget_background_color">Cor do fundo</string>
@@ -194,7 +197,7 @@ músicas adicionadas à fila.</item>
     <string name="fav_title">Favoritos</string>
     <!-- -->
     <string name="library_title">Biblioteca</string>
-    <!-- -->
+    <!-- Lock Queue -->
     <!-- Library screen, menu item -->
     <string name="search_title">Pesquisar</string>
     <string name="search_filter">Filtro</string>
@@ -290,10 +293,6 @@ músicas adicionadas à fila.</item>
     <string name="pref_title_ignore_folder_art">Ignorar capa na pasta</string>
     <!-- Settings summary for the embedded artwork checkbox-->
     <string name="pref_summary_ignore_folder_art">Não procurar capas armazenadas nas suas pastas de músicas</string>
-    <!-- Settings title for ignore folder artwork checkbox (whether the app can use local artwork for the album art -->
-    <string name="pref_title_prefer_lastfm">Preferir capas do Last.fm</string>
-    <!-- Settings summary for the embedded artwork checkbox-->
-    <string name="pref_summary_prefer_lastfm">Marque essa caixa se você prefere que o Shuttle procure uma capa no Last.fm primeiro, antes de procurar nos servidores do iTunes. (Apenas capas de álbuns)</string>
     <!-- Settings title for Artwork settings heading -->
     <string name="pref_string_title_artwork">Capas</string>
     <!-- Settings title for the download artwork button -->
@@ -384,8 +383,6 @@ Se estiver desmarcado, o ícone do Shuttle será usado como uma capa</string>
     <string name="pref_title_version">Versão</string>
     <string name="pref_title_faq">Perguntas frequentes</string>
     <string name="pref_summary_faq">Tem alguma pergunta? Precisa de ajuda? Clique aqui para ver as perguntas frequentes em www.shuttlemusicplayer.com</string>
-    <string name="pref_title_gplus">Pedir ajuda</string>
-    <string name="pref_summary_gplus">Há uma comunidade bastante ativa de usuários do Shuttle no Google+. Se você tiver perguntas ou precisa de ajuda, lá é o melhor lugar para ir.</string>
     <string name="pref_title_rate">Diga obrigado</string>
     <string name="pref_summary_rate">Se você gosta do Shuttle, considere deixar um comentário.</string>
     <string name="pref_title_headset_beep">Fazer Beep ao Pular</string>
@@ -438,7 +435,7 @@ Se estiver desmarcado, o ícone do Shuttle será usado como uma capa</string>
     <!-- Button text for saving tags  -->
     <string name="save">Salvar</string>
     <!-- Message displayed when tag editing fails -->
-    <string name="tag_error">Um erro ocorreu ao editar as tags.</string>
+    <string name="tag_error">Um erro ocorreu ao editar as tags. Se o arquivo estiver são num Cartão SD, o Shuttle pode não ter permissões para acessá-lo.</string>
     <string name="tag_editor_document_tree_message">Devido à mudanças no Android 5.0, o Google agora exige que você especifique quais pastas o app pode editar num cartão de memória.\n\nO Shuttle abrirá um seletor de arquivos. Por favor, escolha a pasta mãe dos arquivos que você deseja modificar.</string>
     <string name="tag_editor_check_permission">Conferindo permissões. Isso pode demorar um pouco...\n\nCulpe o Google!</string>
     <string name="tag_editor_document_tree_permission_failed">Parece que o Shuttle ainda não tem permissões para editar os arquivos. Marque novamente o diretório no seletor de arquivos.</string>
@@ -697,8 +694,7 @@ pastas</item>
     <string name="artwork_edit">Escolher capas</string>
     <string name="artwork_type_media_store">Media Store</string>
     <string name="artwork_type_tag">Tag</string>
-    <string name="artwork_type_lastfm">Last.FM</string>
-    <string name="artwork_type_itunes">iTunes</string>
+    <string name="artwork_type_internet">Internet</string>
     <string name="artwork_type_custom">Customizado</string>
     <string name="artwork_gallery">Galeria</string>
     <!-- Launcher Shortcuts -->
@@ -749,4 +745,5 @@ pastas</item>
     <string name="saf_access_required_title">Acesso de armazenamento necessário</string>
     <string name="saf_access_required_message">O Shuttle requer permissão para acessar esses arquivos. Escolha o diretório que contém sua música.</string>
     <string name="saf_show_files_button">Mostrar arquivos</string>
+    <string name="notification_text_shuttle_running">Serviço do Shuttle em execução...</string>
 </resources>
